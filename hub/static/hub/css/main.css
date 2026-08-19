@@ -129,10 +129,6 @@ code {
   letter-spacing: -0.05em;
   line-height: 0.85;
 }
-.numeral-giant {
-  font-size: clamp(6rem, 14vw, 11rem);
-  color: var(--accent);
-}
 
 /* ---------- buttons / forms ---------- */
 
@@ -482,42 +478,60 @@ details form { margin-top: 0.8rem; display: grid; gap: 0.7rem; max-width: 26rem;
 
 /* ---------- phase page ---------- */
 
-.phase-layout {
-  display: grid;
-  grid-template-columns: minmax(10rem, 16vw) minmax(0, 1fr);
-  gap: 2.4rem;
-}
-.phase-giant { position: sticky; top: 1.5rem; align-self: start; }
-.phase-side-nav { display: grid; gap: 0; margin-top: 1.2rem; border-top: var(--hairline-soft); }
-.phase-side-nav a {
-  font-size: 0.78rem;
-  padding: 0.4rem 0.2rem;
-  border-bottom: var(--hairline-soft);
-  color: var(--ink-soft);
-  display: flex;
-  gap: 0.5rem;
-}
-.phase-side-nav a .num { color: var(--ink); font-weight: 700; }
-.phase-side-nav a.here { color: var(--ink); font-weight: 600; border-left: 3px solid var(--accent); padding-left: 0.5rem; }
 .phase-head { align-items: flex-start; }
 .phase-edit { max-width: 28rem; }
 
 .phase-body {
   display: grid;
-  grid-template-columns: 13rem minmax(0, 1fr);
-  gap: 1.8rem;
+  grid-template-columns: 15rem minmax(0, 1fr);
+  gap: 2rem;
   align-items: start;
 }
 
-/* ---------- phase sidebar tree ---------- */
+/* ---------- unified phase sidebar: numeral + phase nav + tree ---------- */
 
-.phase-tree {
+.phase-side {
   position: sticky;
   top: 1.5rem;
   border-right: var(--hairline-soft);
-  padding-right: 0.8rem;
+  padding-right: 1rem;
   font-size: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  max-height: calc(100vh - 3rem);
 }
+.numeral-side {
+  font-size: clamp(3.6rem, 6vw, 5.2rem);
+  color: var(--accent);
+  display: block;
+  line-height: 0.85;
+}
+.phase-side .phase-side-nav {
+  margin-top: 0;
+  border-top: var(--hairline);
+  border-bottom: var(--hairline-soft);
+}
+.phase-side .phase-side-nav a {
+  font-size: 0.78rem;
+  padding: 0.32rem 0.2rem;
+  border-bottom: var(--hairline-soft);
+  color: var(--ink-soft);
+  display: flex;
+  gap: 0.5rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.phase-side .phase-side-nav a .num { color: var(--ink); font-weight: 700; }
+.phase-side .phase-side-nav a.here {
+  color: var(--ink);
+  font-weight: 600;
+  border-left: 3px solid var(--accent);
+  padding-left: 0.5rem;
+}
+.phase-side .phase-tree { flex: 1; min-height: 0; }
+.phase-side .tree-scroll { max-height: none; flex: 1; min-height: 0; overflow: auto; }
 .tree-head {
   font-size: 0.72rem;
   text-transform: uppercase;
@@ -527,7 +541,6 @@ details form { margin-top: 0.8rem; display: grid; gap: 0.7rem; max-width: 26rem;
   margin-bottom: 0.4rem;
   border-bottom: var(--hairline-soft);
 }
-.tree-scroll { max-height: 72vh; overflow: auto; }
 .tree-folder { border: none; padding: 0; }
 .tree-folder > summary {
   list-style: none;
@@ -658,15 +671,17 @@ details form { margin-top: 0.8rem; display: grid; gap: 0.7rem; max-width: 26rem;
 
 @media (max-width: 1100px) {
   .phase-body { grid-template-columns: 1fr; }
-  .phase-tree { position: static; border-right: none; padding-right: 0; }
-  .tree-scroll { max-height: 16rem; }
+  .phase-side {
+    position: static;
+    max-height: none;
+    border-right: none;
+    padding-right: 0;
+  }
+  .phase-side .tree-scroll { max-height: 16rem; }
 }
 
 @media (max-width: 900px) {
   .track { grid-template-columns: 1fr; }
   .track-main { border-right: none; border-bottom: var(--hairline-soft); }
-  .phase-layout { grid-template-columns: 1fr; }
-  .phase-giant { position: static; display: flex; gap: 1.5rem; align-items: center; }
-  .phase-side-nav { margin-top: 0; flex: 1; }
   .settings-grid { grid-template-columns: 1fr; }
 }

@@ -2,39 +2,25 @@
 {% load rph_extras %}
 {% block title %}{{ phase.order|stringformat:"02d" }} {{ phase.name }} — {{ project.name }}{% endblock %}
 {% block content %}
-<div class="phase-layout">
-  <aside class="phase-giant">
-    <span class="numeral numeral-giant">{{ phase.order|stringformat:"02d" }}</span>
-    <nav class="phase-side-nav">
-      {% for ph in phases %}
-      <a class="{% if ph.pk == phase.pk %}here{% endif %}" href="{% url 'hub:phase' project.slug ph.order %}">
-        <span class="num">{{ ph.order|stringformat:"02d" }}</span> {{ ph.name }}
-      </a>
-      {% endfor %}
-    </nav>
-  </aside>
-  <div class="phase-main">
-    <div class="page-head phase-head">
-      <div>
-        <p class="crumb"><a href="{% url 'hub:home' %}">Portfolio</a> /
-          <a href="{% url 'hub:project' project.slug %}">{{ project.name }}</a> /
-          {{ phase.order|stringformat:"02d" }} {{ phase.name }}</p>
-        <h1>{{ phase.name }}</h1>
-        {% if phase.extraction_focus %}
-        <p class="hint">Extraction focus: {{ phase.extraction_focus }}</p>
-        {% endif %}
-      </div>
-      <details class="phase-edit">
-        <summary>Edit phase</summary>
-        <form hx-post="{% url 'hub:phase_rename' project.slug phase.pk %}"
-              hx-target="#phase-body" hx-select="#phase-body" hx-swap="outerHTML">
-          <label>Name <input type="text" name="name" value="{{ phase.name }}" required></label>
-          <label>Extraction focus <input type="text" name="extraction_focus" value="{{ phase.extraction_focus }}"></label>
-          <button type="submit">Save</button>
-        </form>
-      </details>
-    </div>
-    {% include "hub/_phase_body.html" %}
+<div class="page-head phase-head">
+  <div>
+    <p class="crumb"><a href="{% url 'hub:home' %}">Portfolio</a> /
+      <a href="{% url 'hub:project' project.slug %}">{{ project.name }}</a> /
+      {{ phase.order|stringformat:"02d" }} {{ phase.name }}</p>
+    <h1>{{ phase.name }}</h1>
+    {% if phase.extraction_focus %}
+    <p class="hint">Extraction focus: {{ phase.extraction_focus }}</p>
+    {% endif %}
   </div>
+  <details class="phase-edit">
+    <summary>Edit phase</summary>
+    <form hx-post="{% url 'hub:phase_rename' project.slug phase.pk %}"
+          hx-target="#phase-body" hx-select="#phase-body" hx-swap="outerHTML">
+      <label>Name <input type="text" name="name" value="{{ phase.name }}" required></label>
+      <label>Extraction focus <input type="text" name="extraction_focus" value="{{ phase.extraction_focus }}"></label>
+      <button type="submit">Save</button>
+    </form>
+  </details>
 </div>
+{% include "hub/_phase_body.html" %}
 {% endblock %}

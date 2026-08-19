@@ -6,10 +6,22 @@
      hx-trigger="rph:tick from:body, every 30s">
 
   {% if phase_tree %}
-  <aside class="phase-tree">
-    <p class="tree-head">{{ phase.order|stringformat:"02d" }} {{ phase.name }}</p>
-    <div class="tree-scroll">
-      {% include "hub/_tree.html" with tree=phase_tree %}
+  <aside class="phase-side">
+    <div class="side-numeral">
+      <span class="numeral numeral-side">{{ phase.order|stringformat:"02d" }}</span>
+    </div>
+    <nav class="phase-side-nav">
+      {% for ph in phases %}
+      <a class="{% if ph.pk == phase.pk %}here{% endif %}" href="{% url 'hub:phase' project.slug ph.order %}">
+        <span class="num">{{ ph.order|stringformat:"02d" }}</span> {{ ph.name }}
+      </a>
+      {% endfor %}
+    </nav>
+    <div class="phase-tree">
+      <p class="tree-head">Folders</p>
+      <div class="tree-scroll">
+        {% include "hub/_tree.html" with tree=phase_tree %}
+      </div>
     </div>
   </aside>
   {% endif %}
