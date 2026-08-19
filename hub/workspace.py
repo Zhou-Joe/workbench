@@ -9,6 +9,9 @@ from django.utils.text import slugify
 ARCHIVE_DIR = "_archive"
 SETTINGS_NAME = "settings"
 
+# Default sub-folders created inside every new phase (and addable at will)
+PHASE_SUBFOLDER_TEMPLATE = ("01-incoming", "02-working", "03-issued")
+
 
 def project_root(settings, project):
     root = settings.expanded_workspace_root()
@@ -32,7 +35,47 @@ def scaffold_project(settings, project, phases):
         raise RuntimeError("Workspace root is not configured — set it on the Settings screen.")
     (Path(root) / project.slug).mkdir(parents=True, exist_ok=True)
     for phase in phases:
-        phase_dir(settings, project, phase).mkdir(parents=True, exist_ok=True)
+        pdir = phase_dir(settings, project, phase)
+        pdir.mkdir(parents=True, exist_ok=True)
+        for sub in PHASE_SUBFOLDER_TEMPLATE:
+            (pdir / sub).mkdir(exist_ok=True)
+
+
+def safe_subpath(base_dir, path_str):
+    """Validate a user-supplied relative path ('a/b') against base_dir.
+    Returns the resolved Path, or None when any segment is unsafe."""
+    segments = [
+        s
+        for s in (path_str or "").strip("/").split("/")
+        if s and not s.startswith(".") and s not in ("..", ARCHIVE_DIR)
+    ]
+    candidate = base_dir.joinpath(*segments) if segments else base_dir
+    resolved = candidate.resolve()
+    if str(resolved).startswith(str(base_dir.resolve())):
+        return resolved
+    return base_dir.resolve()
+
+
+def folder_item_count(path):
+    """Recursive item count for a folder row, Finder-style."""
+    count = 0
+    for child in path.rglob("*"):
+        rel = child.relative_to(path)
+        if any(part.startswith(".") for part in rel.parts):
+            continue
+        if ARCHIVE_DIR in rel.parts:
+            continue
+        if child.is_file():
+            count += 1
+    return count
+
+
+def create_subfolder(settings, project, phase, path_str, name):
+    """Create a new folder inside path_str; returns the folder name."""
+    base = safe_subpath(phase_dir(settings, project, phase), path_str)
+    clean = slugify_folder(name, {p.name for p in base.iterdir() if p.is_dir()})
+    (base / clean).mkdir(exist_ok=True)
+    return clean
 
 
 def sync_phase_dirs(settings, project):

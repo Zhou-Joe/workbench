@@ -350,6 +350,53 @@ details form { margin-top: 0.8rem; display: grid; gap: 0.7rem; max-width: 26rem;
 .mtype-issue, .mtype-risk { background: var(--accent); border-color: var(--accent); color: #fff; }
 .mtype-action { border-color: var(--accent); color: var(--accent); }
 
+/* ---------- phase browser (Finder-style) ---------- */
+
+.crumbs {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+  font-size: 0.85rem;
+}
+.crumbs a { font-weight: 600; }
+.crumbs a:hover { color: var(--accent); text-decoration: underline; }
+.crumb-sep { color: var(--ink-soft); }
+
+.folder-list {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 0;
+  border-bottom: var(--hairline-soft);
+  margin-bottom: 0.6rem;
+}
+.folder-row {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.5rem 0.4rem;
+  border-right: var(--hairline-soft);
+  border-bottom: var(--hairline-soft);
+  margin-bottom: -1px;
+}
+.folder-row:hover { background: var(--neutral); color: var(--accent); }
+.folder-icon { width: 1rem; height: 1rem; fill: var(--accent); flex: none; }
+.folder-name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.folder-row .mini { margin-left: auto; }
+
+.new-folder { border: none; padding: 0; }
+.new-folder form {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-end;
+  margin-top: 0.5rem;
+  border: none;
+  padding: 0;
+  max-width: none;
+}
+
 /* ---------- drop zone ---------- */
 
 .dropzone {

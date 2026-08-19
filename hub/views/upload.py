@@ -1,4 +1,4 @@
-"""Browser drag-and-drop upload into a phase folder."""
+"""Browser drag-and-drop upload into a phase folder (Finder-style browsing)."""
 
 from pathlib import Path
 
@@ -7,7 +7,6 @@ from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_POST
 
 from .. import ingest, workspace
-from ..events import publish_doc_event
 from ..models import AppSettings, Phase
 
 
@@ -21,20 +20,21 @@ def phase_upload(request, project_slug, order):
     if not files:
         return HttpResponseBadRequest("no files")
     try:
-        pdir = workspace.phase_dir(settings, phase.project, phase)
-        pdir.mkdir(parents=True, exist_ok=True)
+        # current browsed folder + optional extra sub-folder relative to it
+        base = workspace.safe_subpath(
+            workspace.phase_dir(settings, phase.project, phase),
+            request.POST.get("path", ""),
+        )
+        folder = request.POST.get("folder", "").strip().strip("/")
+        segments = [
+            s
+            for s in folder.split("/")
+            if s and not s.startswith(".") and s not in ("..", workspace.ARCHIVE_DIR)
+        ]
+        target_dir = base.joinpath(*segments) if segments else base
+        target_dir.mkdir(parents=True, exist_ok=True)
     except RuntimeError as exc:
         return HttpResponseBadRequest(str(exc))
-
-    # optional sub-folder inside the phase, e.g. "structural/reports"
-    folder = request.POST.get("folder", "").strip().strip("/")
-    segments = [
-        s
-        for s in folder.split("/")
-        if s and not s.startswith(".") and s not in ("..", workspace.ARCHIVE_DIR)
-    ]
-    target_dir = pdir.joinpath(*segments) if segments else pdir
-    target_dir.mkdir(parents=True, exist_ok=True)
 
     for uploaded in files:
         # basename only — never trust client paths

@@ -6,7 +6,7 @@ from .project import (
     project_detail,
     project_rescan,
 )
-from .phase import phase_detail
+from .phase import phase_detail, phase_folder_new
 from .upload import phase_upload
 from .docs import (
     assign_new_series,
@@ -28,6 +28,7 @@ __all__ = [
     "phase_move",
     "project_rescan",
     "phase_detail",
+    "phase_folder_new",
     "phase_upload",
     "assign_new_series",
     "assign_predecessor",

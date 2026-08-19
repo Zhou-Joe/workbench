@@ -31,6 +31,11 @@ urlpatterns = [
         name="phase_upload",
     ),
     path(
+        "project/<project_slug>/phase/<int:order>/folder/new/",
+        views.phase_folder_new,
+        name="phase_folder_new",
+    ),
+    path(
         "doc/<int:doc_id>/series/new/",
         views.assign_new_series,
         name="assign_new_series",

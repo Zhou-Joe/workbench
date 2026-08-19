@@ -138,7 +138,9 @@ def phase_rename(request, slug, phase_id):
     if focus != phase.extraction_focus:
         phase.extraction_focus = focus
         phase.save(update_fields=["extraction_focus"])
-    return _redirect_project(project)
+    from .phase import phase_detail
+
+    return phase_detail(request, project.slug, phase.order)
 
 
 def phase_move(request, slug, phase_id):

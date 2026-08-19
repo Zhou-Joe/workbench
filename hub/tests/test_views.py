@@ -25,6 +25,26 @@ class PortfolioViewTests(TestCase):
         self.assertEqual(project.phases.count(), 6)
         self.assertEqual(project.phases.first().name, "Blue Sky")
 
+    def test_create_project_scaffolds_default_subfolders(self):
+        from hub.models import AppSettings
+
+        settings = AppSettings.load()
+        settings.workspace_root = "/tmp/rph_scaffold_test"
+        settings.save()
+        import shutil
+        from pathlib import Path
+
+        shutil.rmtree("/tmp/rph_scaffold_test", ignore_errors=True)
+        self.client.post(reverse("hub:project_create"), {"name": "Scaffold Test"})
+        phase_dir = (
+            Path("/tmp/rph_scaffold_test") / "scaffold-test" / "01-blue-sky"
+        )
+        self.assertEqual(
+            sorted(p.name for p in phase_dir.iterdir()),
+            ["01-incoming", "02-working", "03-issued"],
+        )
+        shutil.rmtree("/tmp/rph_scaffold_test", ignore_errors=True)
+
 
 class ProjectViewTests(WorkspaceTestCase):
     def test_project_page_shows_ledger(self):
@@ -133,6 +153,70 @@ class PhaseViewTests(WorkspaceTestCase):
         saved = self.phase_dir(project, 1) / "outside" / "x.pdf"
         self.assertTrue(saved.exists())
         self.assertFalse((self.root / "outside").exists())
+
+    def test_browse_subfolder_shows_only_its_files(self):
+        project = self.seed_project()
+        pdir = self.phase_dir(project, 2)
+        (pdir / "structural").mkdir()
+        make_docx(pdir / "structural" / "deep.docx", ["nested"])
+        make_docx(pdir / "top.docx", ["top level"])
+        ingest.scan_project(project)
+
+        root_view = self.client.get(reverse("hub:phase", args=[project.slug, 2]))
+        self.assertContains(root_view, "top.docx")
+        self.assertContains(root_view, "structural")
+        # the file table lists only root-level files; the nested one appears
+        # solely in the phase-wide unassigned panel (with its location chip)
+        self.assertNotContains(
+            root_view, 'title="cosmic-coaster/02-phase-2/structural/deep.docx"'
+        )
+
+        deep_view = self.client.get(
+            reverse("hub:phase", args=[project.slug, 2]), {"path": "structural"}
+        )
+        self.assertContains(deep_view, "deep.docx")
+        self.assertNotContains(deep_view, "top.docx")
+        self.assertContains(deep_view, "structural")
+
+    def test_browse_rejects_path_escape(self):
+        project = self.seed_project()
+        resp = self.client.get(
+            reverse("hub:phase", args=[project.slug, 1]),
+            {"path": "../../outside"},
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertNotContains(resp, "outside /")
+
+    def test_folder_new_creates_folder(self):
+        project = self.seed_project()
+        resp = self.client.post(
+            reverse("hub:phase_folder_new", args=[project.slug, 1]),
+            {"name": "Vendor Reports", "path": ""},
+            headers={"HX-Request": "true"},
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertTrue((self.phase_dir(project, 1) / "vendor-reports").is_dir())
+
+    def test_upload_with_path_lands_in_browsed_folder(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from hub.models import Document
+
+        project = self.seed_project()
+        upload = SimpleUploadedFile("nested.pdf", b"%PDF-1.4 nested")
+        resp = self.client.post(
+            reverse("hub:phase_upload", args=[project.slug, 2]),
+            {"files": [upload], "path": "structural/calcs"},
+            headers={"HX-Request": "true"},
+        )
+        self.assertEqual(resp.status_code, 200)
+        saved = (
+            self.phase_dir(project, 2) / "structural" / "calcs" / "nested.pdf"
+        )
+        self.assertTrue(saved.exists())
+        self.assertEqual(
+            Document.objects.get(filename="nested.pdf").location,
+            "structural/calcs",
+        )
 
     def test_upload_without_workspace_root_is_bad_request(self):
         from django.core.files.uploadedfile import SimpleUploadedFile

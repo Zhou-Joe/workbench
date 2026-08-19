@@ -79,6 +79,7 @@
       if (folderInput && folderInput.value.trim()) {
         fd.append("folder", folderInput.value.trim());
       }
+      fd.append("path", zone.getAttribute("data-path") || "");
       status.textContent =
         "uploading " + fileList.length + " file" +
         (fileList.length > 1 ? "s" : "") + "…";
