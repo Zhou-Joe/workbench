@@ -36,3 +36,4 @@ tzlocal==5.4.4
 urllib3==2.7.0
 watchdog==6.0.0
 xlsxwriter==3.2.9
+mammoth==1.12.1

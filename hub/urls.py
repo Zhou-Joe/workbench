@@ -59,6 +59,7 @@ urlpatterns = [
     ),
     path("milestone/<int:ms_id>/edit/", views.milestone_edit, name="milestone_edit"),
     path("download/file/", views.download_file, name="download_file"),
+    path("preview/", views.preview, name="preview"),
     path("download/folder/", views.download_folder, name="download_folder"),
     path("download/zip/", views.download_zip, name="download_zip"),
     path("settings/", views.settings_view, name="settings"),

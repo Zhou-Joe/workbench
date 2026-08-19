@@ -408,6 +408,23 @@ details form { margin-top: 0.8rem; display: grid; gap: 0.7rem; max-width: 26rem;
 .col-sel input[type="checkbox"] { accent-color: var(--accent); }
 .col-dl { width: 2.2rem; }
 .doc-table td.col-dl, .doc-table th.col-dl { padding: 0.3rem 0; text-align: center; }
+
+.doc-open { color: inherit; }
+.doc-open:hover { color: var(--accent); text-decoration: underline; }
+
+/* ---------- preview page ---------- */
+
+.preview-main { max-width: 60rem; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+.docx-body { font-size: 0.95rem; line-height: 1.55; }
+.docx-body h1, .docx-body h2, .docx-body h3 { margin: 1.2rem 0 0.5rem; letter-spacing: -0.01em; }
+.docx-body p { margin-bottom: 0.7rem; }
+.docx-body table { border-collapse: collapse; margin: 0.8rem 0; }
+.docx-body td, .docx-body th { border: var(--hairline-soft); padding: 0.3rem 0.5rem; font-size: 0.85rem; }
+.docx-body img { max-width: 100%; height: auto; }
+.sheet-section h2 { font-size: 1rem; margin: 1.4rem 0 0.5rem; }
+.preview-sheet { border-collapse: collapse; font-size: 0.82rem; }
+.preview-sheet td { border: var(--hairline-soft); padding: 0.25rem 0.55rem; white-space: nowrap; }
+.preview-sheet tr:first-child td { background: var(--neutral); font-weight: 600; }
 .folder-icon { width: 1rem; height: 1rem; fill: var(--accent); flex: none; }
 .folder-name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .folder-row .mini { margin-left: auto; }

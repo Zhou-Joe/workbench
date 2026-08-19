@@ -1,0 +1,42 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ filename }} — preview — Ride Program Hub</title>
+<link rel="stylesheet" href="{% static 'hub/css/main.css' %}">
+</head>
+<body class="preview-page">
+<header class="masthead">
+  <div class="masthead-inner">
+    <span class="wordmark">RIDE&nbsp;PROGRAM&nbsp;HUB<span class="wordmark-rule"></span></span>
+    <span class="activity">{{ filename }}</span>
+    <nav class="masthead-nav">
+      <a href="{% url 'hub:download_file' %}?path={{ path|urlencode }}">Download</a>
+      <a href="#" onclick="window.close();return false;">Close</a>
+    </nav>
+  </div>
+</header>
+<main class="preview-main">
+  {% if unsupported %}
+  <p class="empty">No in-browser preview for this file type (native CAD / binary format).
+    Use <a href="{% url 'hub:download_file' %}?path={{ path|urlencode }}">Download</a> to open it in its own application.</p>
+  {% elif error %}
+  <p class="empty">Preview failed — {{ error }}.
+    Use <a href="{% url 'hub:download_file' %}?path={{ path|urlencode }}">Download</a> instead.</p>
+  {% elif kind == "document" %}
+  <article class="docx-body">{{ body_html|safe }}</article>
+  {% elif kind == "sheet" %}
+  {% for s in sheets %}
+  <section class="sheet-section">
+    <h2>{{ s.name }}</h2>
+    <table class="preview-sheet">
+      {% for row in s.rows %}<tr>{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>{% endfor %}
+    </table>
+    {% if s.truncated %}<p class="hint">first 200 rows shown</p>{% endif %}
+  </section>
+  {% endfor %}
+  {% endif %}
+</main>
+</body>
+</html>

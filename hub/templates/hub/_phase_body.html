@@ -67,7 +67,7 @@
           <tr>
             <td class="col-sel"><input type="checkbox" name="p" value="{{ f.rel }}"></td>
             <td class="doc-name" title="{{ f.doc.file_path }}">
-              {{ f.name }}
+              <a class="doc-open" href="{% url 'hub:preview' %}?path={{ f.rel|urlencode }}" target="_blank">{{ f.name }}</a>
               {% if f.doc.quality_note %}<span class="flag" title="{{ f.doc.quality_note }}">⚑</span>{% endif %}
               {% if f.doc.series_id %}<button type="button" class="linkish"
                 hx-get="{% url 'hub:series_stack' f.doc.series_id %}"
@@ -85,7 +85,7 @@
           {% else %}
           <tr class="dim">
             <td class="col-sel"><input type="checkbox" name="p" value="{{ f.rel }}"></td>
-            <td class="doc-name">{{ f.name }}</td>
+            <td class="doc-name"><a class="doc-open" href="{% url 'hub:preview' %}?path={{ f.rel|urlencode }}" target="_blank">{{ f.name }}</a></td>
             <td>—</td>
             <td class="num">—</td>
             <td class="num">{{ f.size|filesizeformat }}</td>

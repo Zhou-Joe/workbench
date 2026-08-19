@@ -13,7 +13,7 @@
     <li class="{% if doc.is_latest %}stack-latest{% endif %}">
       <span class="num rev">r{{ doc.revision_number|default:"—" }}</span>
       <span class="num">{{ doc.ingested_at|date:"Y-m-d" }}</span>
-      <span class="doc-name">{{ doc.filename }}</span>
+      <span class="doc-name"><a class="doc-open" href="{% url 'hub:preview' %}?path={{ doc.file_path|urlencode }}" target="_blank">{{ doc.filename }}</a></span>
       {% if doc.is_latest %}<span class="chip">latest</span>{% endif %}
       <a class="dl" href="{% url 'hub:download_file' %}?path={{ doc.file_path|urlencode }}" title="Download {{ doc.filename }}">
         <svg class="dl-icon" width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1v8M4.5 6.5 8 10l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M2 12v2h12v-2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></a>
