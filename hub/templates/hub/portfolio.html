@@ -11,7 +11,7 @@
   {% endif %}
 </div>
 
-<details class="new-project" open="{% if not tracks %}true{% endif %}">
+<details class="new-project" {% if not tracks %}open{% endif %}>
   <summary>New project</summary>
   <form id="create-project-form"
         hx-post="{% url 'hub:project_create' %}"

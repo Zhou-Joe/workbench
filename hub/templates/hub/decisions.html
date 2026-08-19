@@ -10,6 +10,8 @@
   </div>
 </div>
 
+{% include "hub/_project_tabs.html" with active_tab="decisions" %}
+
 {% if decisions %}
 <table class="ledger-table decisions-table">
   <thead><tr><th>Date</th><th>Decision</th><th>Basis (quoted from source)</th><th>Source</th><th>Status</th></tr></thead>

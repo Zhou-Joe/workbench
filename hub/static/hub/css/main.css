@@ -246,6 +246,44 @@ mark { background: #ffe3d6; color: inherit; padding: 0 0.1em; }
 .palette-list li.palette-active { background: var(--accent); color: #fff; }
 .palette-hint { padding: 0.4rem 1rem 0.6rem; font-size: 0.72rem; color: var(--ink-soft); }
 
+/* ---------- project tabs & badges ---------- */
+
+.tabs {
+  display: flex;
+  border-bottom: var(--hairline);
+  margin-bottom: 1.6rem;
+}
+.tabs a {
+  padding: 0.5rem 1.2rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  border-right: var(--hairline-soft);
+}
+.tabs a:hover { color: var(--accent); }
+.tabs a.active {
+  color: var(--ink);
+  box-shadow: inset 0 -3px 0 var(--accent);
+}
+
+.navbadge {
+  display: inline-block;
+  min-width: 1.1rem;
+  text-align: center;
+  font-size: 0.68rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  background: var(--ink);
+  color: var(--paper);
+  padding: 0.05rem 0.28rem;
+}
+.navbadge-warn { background: var(--accent); }
+
+.dropzone-wrap { border: 1px dashed var(--ink); padding: 0.5rem 0.9rem; }
+.dropzone-wrap > summary { font-size: 0.82rem; font-weight: 600; }
+.dropzone-wrap[open] { border-style: solid; }
+.dropzone-wrap .dropzone { border: none; padding: 0.6rem 0 0.2rem; }
+
 /* ---------- decisions & report ---------- */
 
 .decisions-table .ms-evidence { font-size: 0.8rem; color: var(--ink-soft); max-width: 26rem; }

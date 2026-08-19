@@ -1,0 +1,14 @@
+{% comment %}Project-level tab bar shared by ledger / timeline / decisions / report / phase pages.
+Pass `active_tab`: ledger | timeline | decisions | report | phases {% endcomment %}
+<nav class="tabs" aria-label="project sections">
+  <a href="{% url 'hub:project' project.slug %}"
+     class="{% if active_tab == 'ledger' %}active{% endif %}">Ledger</a>
+  <a href="{% url 'hub:project_timeline' project.slug %}"
+     class="{% if active_tab == 'timeline' %}active{% endif %}">Timeline</a>
+  <a href="{% url 'hub:project_decisions' project.slug %}"
+     class="{% if active_tab == 'decisions' %}active{% endif %}">Decisions</a>
+  <a href="{% url 'hub:project_report' project.slug %}"
+     class="{% if active_tab == 'report' %}active{% endif %}">Report</a>
+  <a href="{% url 'hub:phase' project.slug 1 %}"
+     class="{% if active_tab == 'phases' %}active{% endif %}">Phases</a>
+</nav>

@@ -16,6 +16,8 @@
   </div>
 </div>
 
+{% include "hub/_project_tabs.html" with active_tab="timeline" %}
+
 {% if rows %}
 <svg class="gantt" viewBox="0 0 {{ chart_width }} {{ chart_height }}" width="100%" role="img" aria-label="milestone timeline">
   <defs>

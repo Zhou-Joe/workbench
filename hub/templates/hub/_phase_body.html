@@ -132,39 +132,42 @@
     <div id="series-stack"></div>
   </section>
 
-  <section class="dropzone" data-dropzone="{% url 'hub:phase_upload' project.slug phase.order %}"
-           data-path="{{ current }}">
-    <p class="dropzone-title">Drop files here{% if current %} into <strong>{{ current }}/</strong>{% endif %}</p>
-    <label class="dropzone-pick">or choose
-      <input type="file" multiple>
-    </label>
-    <label class="dropzone-folder">deeper sub-folder (optional)
-      <input type="text" name="folder" placeholder="e.g. structural/reports — created if missing">
-    </label>
-    <p class="dropzone-status" aria-live="polite"></p>
-    {% if phase_dir_path %}
-    <p class="hint">Saved under <code>{{ phase_dir_path }}/{{ current }}</code> — browsing and dropping files into sub-folders in Finder works the same.</p>
-    {% else %}
-    <p class="hint">Set the workspace root in <a href="{% url 'hub:settings' %}">Settings</a> to enable file handling.</p>
-    {% endif %}
-  </section>
+  <details class="dropzone-wrap" {% if not folders and not files %}open{% endif %}>
+    <summary>Add files{% if current %} to {{ current }}/{% endif %} — drop or choose</summary>
+    <section class="dropzone" data-dropzone="{% url 'hub:phase_upload' project.slug phase.order %}"
+             data-path="{{ current }}">
+      <p class="dropzone-title">Drop files here{% if current %} into <strong>{{ current }}/</strong>{% endif %}</p>
+      <label class="dropzone-pick">or choose
+        <input type="file" multiple>
+      </label>
+      <label class="dropzone-folder">deeper sub-folder (optional)
+        <input type="text" name="folder" placeholder="e.g. structural/reports — created if missing">
+      </label>
+      <p class="dropzone-status" aria-live="polite"></p>
+      {% if phase_dir_path %}
+      <p class="hint">Saved under <code>{{ phase_dir_path }}/{{ current }}</code> — browsing and dropping files into sub-folders in Finder works the same.</p>
+      {% else %}
+      <p class="hint">Set the workspace root in <a href="{% url 'hub:settings' %}">Settings</a> to enable file handling.</p>
+      {% endif %}
+    </section>
+  </details>
 
   {% if phase_dir_path %}
   {% include "hub/_ask_folder.html" with project=project phase=phase current=current folder_questions=folder_questions %}
   {% endif %}
 
   {% if not current %}
-  {% if unassigned %}
-  <section class="panel panel-warn">
+  <section class="panel">
     <div class="section-head">
-      <h2>New files awaiting assignment</h2>
-      <span class="hint">Confirm what each file supersedes — or start a new series.</span>
+      <h2>Phase digest</h2>
+      <span class="hint">{% if digest %}model {{ digest.model_used }}, updated {{ digest.updated_at|date:"Y-m-d H:i" }}{% else %}regenerates as documents land and milestones are confirmed{% endif %}</span>
     </div>
-    {% for doc in unassigned %}
-      {% include "hub/_unassigned_card.html" with doc=doc suggestions=suggestions|get_item:doc.pk %}
-    {% endfor %}
+    {% if digest and digest.content %}
+    <div class="digest">{{ digest.content|linebreaks }}</div>
+    {% else %}
+    <p class="empty">No digest yet.</p>
+    {% endif %}
   </section>
-  {% endif %}
 
   {% if pending_milestones %}
   <section class="panel">
@@ -181,17 +184,17 @@
   </section>
   {% endif %}
 
-  <section class="panel">
+  {% if unassigned %}
+  <section class="panel panel-warn">
     <div class="section-head">
-      <h2>Phase digest</h2>
-      <span class="hint">{% if digest %}model {{ digest.model_used }}, updated {{ digest.updated_at|date:"Y-m-d H:i" }}{% else %}regenerates as documents land and milestones are confirmed{% endif %}</span>
+      <h2>New files awaiting assignment</h2>
+      <span class="hint">Confirm what each file supersedes — or start a new series.</span>
     </div>
-    {% if digest and digest.content %}
-    <div class="digest">{{ digest.content|linebreaks }}</div>
-    {% else %}
-    <p class="empty">No digest yet.</p>
-    {% endif %}
+    {% for doc in unassigned %}
+      {% include "hub/_unassigned_card.html" with doc=doc suggestions=suggestions|get_item:doc.pk %}
+    {% endfor %}
   </section>
+  {% endif %}
 
   {% if archived %}
   <section class="panel">

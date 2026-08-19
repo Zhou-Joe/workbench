@@ -18,6 +18,8 @@
   </div>
 </div>
 
+{% include "hub/_project_tabs.html" with active_tab="report" %}
+
 <div id="report-body"
      {% if generating %}hx-get="{% url 'hub:project_report' project.slug %}" hx-select="#report-wrap" hx-swap="outerHTML" hx-trigger="rph:tick from:body, every 5s"{% endif %}>
   <div id="report-wrap">

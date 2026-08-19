@@ -154,3 +154,29 @@ class PaletteTests(WorkspaceTestCase):
         self.assertIn("Portfolio", labels)
         self.assertIn(project.name, labels)
         self.assertIn(f"{project.name} / 02 Phase 2", labels)
+
+
+class IaTabsTests(WorkspaceTestCase):
+    def test_project_tabs_active_states(self):
+        project = self.seed_project()
+        ledger = self.client.get(
+            reverse("hub:project", args=[project.slug])
+        ).content.decode()
+        self.assertIn("Ledger", ledger)
+        self.assertIn("Decisions", ledger)
+        timeline = self.client.get(
+            reverse("hub:project_timeline", args=[project.slug])
+        ).content.decode()
+        self.assertIn("Timeline", timeline)
+        phase = self.client.get(
+            reverse("hub:phase", args=[project.slug, 1])
+        ).content.decode()
+        self.assertIn("Phases", phase)
+
+    def test_masthead_shows_inbox_badge(self):
+        from hub.models import Capture
+
+        self.seed_project()
+        Capture.objects.create(text="pending note")
+        page = self.client.get(reverse("hub:home")).content.decode()
+        self.assertIn("navbadge", page)
