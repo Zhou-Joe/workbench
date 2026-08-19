@@ -225,6 +225,7 @@ mark { background: #ffe3d6; color: inherit; padding: 0 0.1em; }
   padding-top: 12vh;
   z-index: 50;
 }
+.palette-overlay[hidden] { display: none; }
 .palette-box {
   width: min(34rem, 92vw);
   background: var(--paper);
