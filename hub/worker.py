@@ -171,6 +171,36 @@ class Worker:
         question = job.question
         question.status = Question.Status.RUNNING
         question.save(update_fields=["status"])
+
+        # Preferred path: tool-using LangChain agent (browses folders, reads
+        # files, searches, queries milestones). Falls back to single-shot
+        # keyword retrieval when the agent is unavailable or the model does
+        # not support tool calling.
+        try:
+            from .agent import run_agent_question
+
+            answer, docs = run_agent_question(question.question, question.project)
+            question.answer = answer
+            question.citations = [
+                {
+                    "doc_id": d.pk,
+                    "filename": d.filename,
+                    "path": d.file_path,
+                    "project": d.phase.project.name,
+                    "phase": f"{d.phase.order:02d} {d.phase.name}",
+                }
+                for d in docs
+            ]
+            question.status = Question.Status.DONE
+            question.answered_at = timezone.now()
+            question.save()
+            bus.publish("ask", question_id=question.pk)
+            return
+        except ImportError:
+            logger.info("langchain not installed — using retrieval fallback")
+        except Exception as exc:
+            logger.warning("agent failed (%s) — using retrieval fallback", exc)
+
         docs = _retrieve_documents(question.question, question.project)
         if not docs:
             question.answer = (

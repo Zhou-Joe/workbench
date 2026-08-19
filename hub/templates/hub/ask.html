@@ -6,6 +6,7 @@
     <p class="crumb"><a href="{% url 'hub:home' %}">Portfolio</a> / Ask</p>
     <h1>Ask your documents</h1>
     <p class="hint">Answers come only from extracted document text, with clickable citations.</p>
+    <p class="hint">Powered by a LangChain tool-using agent — it browses folders, reads files, searches text and queries the milestone ledger itself. Needs a tool-calling capable model in LM Studio (e.g. Qwen3); otherwise falls back to simple retrieval.</p>
   </div>
 </div>
 {% include "hub/_ask_area.html" %}

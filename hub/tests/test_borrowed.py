@@ -20,6 +20,8 @@ def ask_chat(settings, messages):
 
 
 class AskTests(WorkspaceTestCase):
+    """Legacy single-shot retrieval path (agent disabled/failing)."""
+
     def _seed_doc(self, project, filename, text):
         phase = project.phases.get(order=1)
         return Document.objects.create(
@@ -40,10 +42,7 @@ class AskTests(WorkspaceTestCase):
         self._seed_doc(
             project, "minutes.txt", "control system IFC package approved 2026-08-12"
         )
-        resp = self.client.post(
-            reverse("hub:ask"), {"q": "What about the weld inspection?"}
-        )
-        self.assertEqual(resp.status_code, 200)
+        self.client.post(reverse("hub:ask"), {"q": "What about the weld inspection?"})
         question = Question.objects.first()
         self.assertEqual(question.status, "queued")
         self.assertTrue(
@@ -51,7 +50,10 @@ class AskTests(WorkspaceTestCase):
                 question=question, kind="ask", status="queued"
             ).exists()
         )
-        with patch("hub.llm.chat", side_effect=ask_chat):
+        with (
+            patch("hub.agent.run_agent_question", side_effect=Exception("agent down")),
+            patch("hub.llm.chat", side_effect=ask_chat),
+        ):
             Worker().run_pending()
         question.refresh_from_db()
         self.assertEqual(question.status, "done")
@@ -67,10 +69,43 @@ class AskTests(WorkspaceTestCase):
     def test_ask_no_matching_documents_answers_plainly(self):
         self.seed_project()
         self.client.post(reverse("hub:ask"), {"q": "anything about giraffes"})
-        Worker().run_pending()  # no LLM call needed for the no-match path
+        with patch("hub.agent.run_agent_question", side_effect=Exception("agent down")):
+            Worker().run_pending()
         question = Question.objects.first()
         self.assertEqual(question.status, "done")
         self.assertIn("No extracted documents matched", question.answer)
+
+
+class AgentAskTests(WorkspaceTestCase):
+    def test_agent_path_with_tool_collected_citations(self):
+        project = self.seed_project()
+        phase = project.phases.get(order=1)
+        doc = Document.objects.create(
+            phase=phase,
+            file_path=f"{project.slug}/01-phase-1/vendor-email.txt",
+            filename="vendor-email.txt",
+            extension=".txt",
+            doc_kind="other",
+            extraction_status="done",
+            extracted_text="weld inspection postponed to September by vendor",
+        )
+        self.client.post(reverse("hub:ask"), {"q": "What about the weld inspection?"})
+        question = Question.objects.first()
+
+        def fake_agent(text, project=None):
+            assert "weld inspection" in text
+            return (
+                "The inspection moves to September [vendor-email.txt].",
+                [doc],
+            )
+
+        with patch("hub.agent.run_agent_question", side_effect=fake_agent):
+            Worker().run_pending()
+        question.refresh_from_db()
+        self.assertEqual(question.status, "done")
+        self.assertIn("September", question.answer)
+        self.assertEqual(len(question.citations), 1)
+        self.assertEqual(question.citations[0]["filename"], "vendor-email.txt")
 
 
 class JobsDashboardTests(WorkspaceTestCase):
