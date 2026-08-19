@@ -5,6 +5,19 @@
      hx-swap="outerHTML"
      hx-trigger="rph:tick from:body, every 30s">
 
+  <section class="dropzone" data-dropzone="{% url 'hub:phase_upload' project.slug phase.order %}">
+    <p class="dropzone-title">Drop files here to add them to this phase</p>
+    <label class="dropzone-pick">or choose
+      <input type="file" multiple>
+    </label>
+    <p class="dropzone-status" aria-live="polite"></p>
+    {% if phase_dir_path %}
+    <p class="hint">Saved to <code>{{ phase_dir_path }}</code> — dropping files there in Finder works the same.</p>
+    {% else %}
+    <p class="hint">Set the workspace root in <a href="{% url 'hub:settings' %}">Settings</a> to enable file handling.</p>
+    {% endif %}
+  </section>
+
   {% if unassigned %}
   <section class="panel panel-warn">
     <div class="section-head">

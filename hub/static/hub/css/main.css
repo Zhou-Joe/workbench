@@ -350,6 +350,32 @@ details form { margin-top: 0.8rem; display: grid; gap: 0.7rem; max-width: 26rem;
 .mtype-issue, .mtype-risk { background: var(--accent); border-color: var(--accent); color: #fff; }
 .mtype-action { border-color: var(--accent); color: var(--accent); }
 
+/* ---------- drop zone ---------- */
+
+.dropzone {
+  border: 1px dashed var(--ink);
+  padding: 1.4rem 1.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  transition: background 120ms linear;
+}
+.dropzone.drag {
+  border-color: var(--accent);
+  border-style: solid;
+  background: #fff7f2;
+}
+.dropzone-title { font-weight: 700; font-size: 0.95rem; }
+.dropzone-pick {
+  flex-direction: row;
+  align-items: baseline;
+  gap: 0.4rem;
+  color: var(--ink-soft);
+  font-size: 0.8rem;
+}
+.dropzone-pick input { width: auto; font-size: 0.78rem; }
+.dropzone-status { font-size: 0.8rem; color: var(--accent); min-height: 1.1em; }
+
 /* ---------- phase page ---------- */
 
 .phase-layout {

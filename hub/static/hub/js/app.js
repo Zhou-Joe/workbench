@@ -59,4 +59,83 @@
       showActivity(describe(data));
     };
   });
+
+  function csrfToken() {
+    var meta = document.querySelector('meta[name="csrf-token"]');
+    return meta ? meta.content : "";
+  }
+
+  function wireDropzone(zone) {
+    var url = zone.getAttribute("data-dropzone");
+    var input = zone.querySelector('input[type="file"]');
+    var status = zone.querySelector(".dropzone-status");
+
+    function upload(fileList) {
+      var fd = new FormData();
+      Array.prototype.forEach.call(fileList, function (f) {
+        fd.append("files", f);
+      });
+      status.textContent =
+        "uploading " + fileList.length + " file" +
+        (fileList.length > 1 ? "s" : "") + "…";
+      fetch(url, {
+        method: "POST",
+        headers: { "X-CSRFToken": csrfToken() },
+        body: fd,
+        credentials: "same-origin",
+      })
+        .then(function (r) {
+          if (!r.ok) {
+            return r.text().then(function (t) {
+              throw new Error(t.slice(0, 140) || "HTTP " + r.status);
+            });
+          }
+          status.textContent = "uploaded — extraction starting";
+          document.body.dispatchEvent(new CustomEvent("rph:tick"));
+        })
+        .catch(function (err) {
+          status.textContent = "upload failed: " + err.message;
+        });
+    }
+
+    if (zone.dataset.wired) return;
+    zone.dataset.wired = "1";
+
+    zone.addEventListener("dragover", function (e) {
+      e.preventDefault();
+      zone.classList.add("drag");
+    });
+    zone.addEventListener("dragleave", function () {
+      zone.classList.remove("drag");
+    });
+    zone.addEventListener("drop", function (e) {
+      e.preventDefault();
+      zone.classList.remove("drag");
+      if (e.dataTransfer && e.dataTransfer.files.length) {
+        upload(e.dataTransfer.files);
+      }
+    });
+    if (input) {
+      input.addEventListener("change", function () {
+        if (input.files.length) upload(input.files);
+        input.value = "";
+      });
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll("[data-dropzone]").forEach(wireDropzone);
+  });
+
+  // phase-body regions are replaced by htmx swaps — re-wire their drop zones
+  document.body.addEventListener("htmx:afterSwap", function (e) {
+    if (e.target && e.target.querySelectorAll) {
+      e.target.querySelectorAll("[data-dropzone]").forEach(function (zone) {
+        if (!zone.dataset.wired) {
+          zone.dataset.wired = "1";
+          wireDropzone(zone);
+        }
+      });
+    }
+  });
 })();

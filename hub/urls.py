@@ -26,6 +26,11 @@ urlpatterns = [
         name="phase",
     ),
     path(
+        "project/<project_slug>/phase/<int:order>/upload/",
+        views.phase_upload,
+        name="phase_upload",
+    ),
+    path(
         "doc/<int:doc_id>/series/new/",
         views.assign_new_series,
         name="assign_new_series",

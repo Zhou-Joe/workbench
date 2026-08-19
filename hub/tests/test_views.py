@@ -74,6 +74,47 @@ class PhaseViewTests(WorkspaceTestCase):
         self.assertContains(resp, "pkg.docx")
         self.assertContains(resp, "Start a new series")
 
+    def test_upload_saves_file_and_ingests(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        project = self.seed_project()
+        upload = SimpleUploadedFile(
+            "minutes.docx", b"placeholder", content_type="application/octet-stream"
+        )
+        make_docx(self.phase_dir(project, 3) / "existing.docx", ["already here"])
+        resp = self.client.post(
+            reverse("hub:phase_upload", args=[project.slug, 3]),
+            {"files": [upload]},
+            headers={"HX-Request": "true"},
+        )
+        self.assertEqual(resp.status_code, 200)
+        saved = self.phase_dir(project, 3) / "minutes.docx"
+        self.assertTrue(saved.exists())
+        self.assertEqual(saved.read_bytes(), b"placeholder")
+        # both files ingested as documents
+        from hub.models import Document
+
+        names = set(
+            Document.objects.filter(phase__project=project).values_list(
+                "filename", flat=True
+            )
+        )
+        self.assertEqual(names, {"minutes.docx", "existing.docx"})
+
+    def test_upload_without_workspace_root_is_bad_request(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        project = self.seed_project()
+        self.settings_obj.workspace_root = ""
+        self.settings_obj.save()
+        upload = SimpleUploadedFile("x.pdf", b"abc")
+        resp = self.client.post(
+            reverse("hub:phase_upload", args=[project.slug, 1]),
+            {"files": [upload]},
+        )
+        self.assertEqual(resp.status_code, 400)
+        self.assertIn("workspace root", resp.content.decode().lower())
+
 
 class MilestoneActionTests(WorkspaceTestCase):
     def test_confirm_returns_row_and_queues_digest(self):

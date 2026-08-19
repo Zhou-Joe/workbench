@@ -1,7 +1,7 @@
 from django.shortcuts import get_object_or_404, render
 
-from .. import revisions
-from ..models import Document, Milestone, Phase
+from .. import revisions, workspace
+from ..models import AppSettings, Document, Milestone, Phase
 
 
 def phase_detail(request, project_slug, order):
@@ -33,6 +33,13 @@ def phase_detail(request, project_slug, order):
     ).select_related("document")
     digest = getattr(phase, "digest", None)
 
+    try:
+        phase_dir_path = str(
+            workspace.phase_dir(AppSettings.load(), project, phase)
+        )
+    except RuntimeError:
+        phase_dir_path = None
+
     context = {
         "project": project,
         "phase": phase,
@@ -43,6 +50,7 @@ def phase_detail(request, project_slug, order):
         "suggestions": suggestions,
         "pending_milestones": pending_milestones,
         "digest": digest,
+        "phase_dir_path": phase_dir_path,
     }
     if request.headers.get("HX-Request"):
         return render(request, "hub/_phase_body.html", context)
