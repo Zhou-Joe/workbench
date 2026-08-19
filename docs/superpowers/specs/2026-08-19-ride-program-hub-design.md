@@ -201,14 +201,30 @@ obvious and prior revisions preserved.
 
 ## 7. UI
 
-Server-rendered Django templates, minimal JavaScript for timeline
-rendering. Four screens plus admin:
+**Architecture:** Django templates server-rendered on first load; every
+operation after that is a targeted htmx fragment swap — confirming a
+milestone, superseding a revision, editing a phase, rescanning, saving
+settings — none of these reload the page. A Server-Sent Events (SSE)
+stream (`/events/`) pushes pipeline state changes (file detected,
+extraction started/done/failed, milestones ready, digest updated) which
+drive live badges and list refreshes. No Node build chain; htmx is a
+vendored static script.
+
+**Visual direction (Swiss anchor):** white `#FFFFFF` surface, hairline
+1px grid rules, one accent — International Orange `#FF4F00` — Helvetica
+Neue typography, left-aligned asymmetric layout. Signature move: the
+phase numerals (`01`–`06`, or however many the user defines) render as
+oversized condensed numerals anchoring each phase track, and the
+milestone ledger is set in tabular numerals like an engineering drawing
+register. No dark-terminal aesthetic; this is a daytime reading tool.
+
+Four screens plus admin:
 
 1. **Portfolio** (home) — every project as a track: current phase, phase
    progression bar, latest confirmed milestones, open-issue count.
 2. **Project timeline** — milestone ledger chronological across phases,
    filterable by phase / type / status; pending-review milestones
-   highlighted; confirm / edit / dismiss actions (form posts).
+   highlighted; confirm / edit / dismiss as inline htmx actions.
 3. **Phase detail** — documents in the phase (latest revisions prominent,
    archived collapsed), phase digest, pending milestones, supersede
    confirmation cards for unassigned new files.
