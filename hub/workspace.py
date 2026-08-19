@@ -71,11 +71,23 @@ def folder_item_count(path):
 
 
 def create_subfolder(settings, project, phase, path_str, name):
-    """Create a new folder inside path_str; returns the folder name."""
+    """Create a folder inside path_str. The name may contain '/' to create
+    nested levels in one step ('vendor/reports'); returns the created path."""
     base = safe_subpath(phase_dir(settings, project, phase), path_str)
-    clean = slugify_folder(name, {p.name for p in base.iterdir() if p.is_dir()})
-    (base / clean).mkdir(exist_ok=True)
-    return clean
+    segments = []
+    existing = {p.name for p in base.iterdir() if p.is_dir()}
+    for raw in name.split("/"):
+        if raw.startswith(".") or raw in ("..", ARCHIVE_DIR):
+            continue
+        slug = slugify_folder(raw, existing)
+        if not slug:
+            continue
+        segments.append(slug)
+        existing = set()  # deeper level starts fresh
+    if not segments:
+        return ""
+    base.joinpath(*segments).mkdir(parents=True, exist_ok=True)
+    return "/".join(segments)
 
 
 def sync_phase_dirs(settings, project):

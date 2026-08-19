@@ -197,6 +197,38 @@ class PhaseViewTests(WorkspaceTestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertTrue((self.phase_dir(project, 1) / "vendor-reports").is_dir())
 
+    def test_folder_new_with_slashes_creates_nested(self):
+        project = self.seed_project()
+        resp = self.client.post(
+            reverse("hub:phase_folder_new", args=[project.slug, 1]),
+            {"name": "vendor-a/calc reports", "path": ""},
+            headers={"HX-Request": "true"},
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertTrue(
+            (self.phase_dir(project, 1) / "vendor-a" / "calc-reports").is_dir()
+        )
+
+    def test_browse_three_levels_deep(self):
+        project = self.seed_project()
+        deep = self.phase_dir(project, 1) / "a" / "b" / "c"
+        deep.mkdir(parents=True)
+        make_docx(deep / "bottom.docx", ["very nested"])
+        ingest.scan_project(project)
+
+        resp = self.client.get(
+            reverse("hub:phase", args=[project.slug, 1]), {"path": "a/b/c"}
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, "bottom.docx")
+        self.assertContains(resp, "c")
+        # file indexed with its full nested location
+        from hub.models import Document
+
+        self.assertEqual(
+            Document.objects.get(filename="bottom.docx").location, "a/b/c"
+        )
+
     def test_upload_with_path_lands_in_browsed_folder(self):
         from django.core.files.uploadedfile import SimpleUploadedFile
         from hub.models import Document

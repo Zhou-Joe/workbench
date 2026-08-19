@@ -366,20 +366,19 @@ details form { margin-top: 0.8rem; display: grid; gap: 0.7rem; max-width: 26rem;
 
 .folder-list {
   list-style: none;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
-  gap: 0;
+  display: flex;
+  flex-wrap: wrap;
   border-bottom: var(--hairline-soft);
   margin-bottom: 0.6rem;
 }
 .folder-row {
+  width: min(16rem, 100%);
   display: flex;
   align-items: center;
   gap: 0.55rem;
-  padding: 0.5rem 0.4rem;
+  padding: 0.45rem 0.5rem;
   border-right: var(--hairline-soft);
   border-bottom: var(--hairline-soft);
-  margin-bottom: -1px;
 }
 .folder-row:hover { background: var(--neutral); color: var(--accent); }
 .folder-icon { width: 1rem; height: 1rem; fill: var(--accent); flex: none; }

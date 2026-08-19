@@ -25,7 +25,7 @@
         <form hx-post="{% url 'hub:phase_folder_new' project.slug phase.order %}"
               hx-target="#phase-body" hx-select="#phase-body" hx-swap="outerHTML">
           <input type="hidden" name="path" value="{{ current }}">
-          <label>Name <input type="text" name="name" required placeholder="e.g. vendor-reports"></label>
+          <label>Name <input type="text" name="name" required placeholder="vendor-reports — or vendor-a/reports for nested"></label>
           <button type="submit">Create</button>
         </form>
       </details>
@@ -39,7 +39,7 @@
            hx-get="{% url 'hub:phase' project.slug phase.order %}?path={{ f.path|urlencode }}"
            hx-target="#phase-body" hx-select="#phase-body" hx-swap="outerHTML"
            hx-push-url="true">
-          <svg class="folder-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M1.5 3h4l1.5 2h7.5v8a1 1 0 0 1-1 1H2.5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/></svg>
+          <svg class="folder-icon" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M1.5 3h4l1.5 2h7.5v8a1 1 0 0 1-1 1H2.5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/></svg>
           <span class="folder-name">{{ f.name }}</span>
           <span class="mini num">{{ f.count }} item{{ f.count|pluralize }}</span>
         </a>
