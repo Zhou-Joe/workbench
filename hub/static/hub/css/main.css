@@ -85,6 +85,49 @@ code {
 }
 .messages li.error { border-left-color: var(--ink); font-weight: 600; }
 
+.masthead-search input {
+  width: 14rem;
+  border: var(--hairline-soft);
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
+}
+.masthead-search input:focus { border: var(--hairline); }
+
+/* ---------- Now/Next dashboard ---------- */
+
+.attention { display: grid; gap: 1.4rem; margin-bottom: 2.4rem; }
+.attention .section-head h1 { font-size: 1.4rem; }
+.badge {
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  padding: 0.06rem 0.4rem;
+  border: var(--hairline-soft);
+  white-space: nowrap;
+}
+.badge-warn { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.badge-over { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 700; }
+.unassigned-mini { list-style: none; display: grid; gap: 0.35rem; }
+.unassigned-mini li { display: flex; gap: 0.8rem; align-items: baseline; flex-wrap: wrap; font-size: 0.85rem; }
+.unassigned-mini a.mini { color: var(--accent); }
+
+/* ---------- search ---------- */
+
+.search-big { display: flex; gap: 0.8rem; margin-bottom: 1rem; }
+.search-big input { font-size: 1rem; }
+.search-results { list-style: none; display: grid; gap: 0.9rem; }
+.search-hit { border: var(--hairline-soft); padding: 0.7rem 0.9rem; }
+.search-hit-head { display: flex; gap: 1rem; align-items: baseline; flex-wrap: wrap; }
+.search-hit-head a { font-weight: 600; }
+.search-snippet { font-size: 0.82rem; color: var(--ink-soft); margin-top: 0.3rem; }
+mark { background: #ffe3d6; color: inherit; padding: 0 0.1em; }
+
+/* ---------- decisions & report ---------- */
+
+.decisions-table .ms-evidence { font-size: 0.8rem; color: var(--ink-soft); max-width: 26rem; }
+.report-body { max-width: 46rem; font-size: 0.92rem; line-height: 1.55; }
+.report-body h2 { font-size: 1rem; margin: 1.2rem 0 0.4rem; border-bottom: var(--hairline-soft); padding-bottom: 0.2rem; }
+.report-body ul { margin: 0.3rem 0 0.7rem 1.2rem; }
+
 /* ---------- page frame ---------- */
 
 .page { max-width: 1360px; margin: 0 auto; padding: 1.8rem 1.5rem 4rem; }

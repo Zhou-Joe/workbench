@@ -51,6 +51,7 @@ class Worker:
             ExtractionJob.Kind.LLM: self.process_llm,
             ExtractionJob.Kind.DIGEST: self.process_digest,
             ExtractionJob.Kind.DELTA: self.process_delta,
+            ExtractionJob.Kind.REPORT: self.process_report,
         }[job.kind]
         try:
             handler(job)
@@ -160,6 +161,57 @@ class Worker:
         digest.model_used = settings.lm_model
         digest.save()
         bus.publish("digest", project_id=phase.project_id, phase_id=phase.pk)
+
+    def process_report(self, job):
+        from datetime import timedelta
+
+        from .models import WeeklyReport
+
+        settings = AppSettings.load()
+        project = job.project
+        cutoff = timezone.now().date() - timedelta(days=14)
+        today = timezone.now().date()
+
+        def age_days(m):
+            base = m.date or m.created_at.date()
+            return max(0, (today - base).days)
+
+        recent = [
+            (m.date, m.title, m.mtype)
+            for m in Milestone.objects.filter(
+                project=project,
+                status__in=["confirmed", "edited"],
+                date__gte=cutoff,
+            ).order_by("-date")
+        ]
+        open_items = [
+            (m.date or m.created_at.date(), m.title, m.mtype, age_days(m))
+            for m in Milestone.objects.filter(
+                project=project,
+                mtype__in=["issue", "risk", "action"],
+                status__in=["extracted", "confirmed", "edited"],
+            ).order_by("date")
+        ]
+        current = project.current_phase()
+        digest_text = ""
+        if current and hasattr(current, "digest") and current.digest.content:
+            digest_text = current.digest.content
+        content = llm.chat(
+            settings,
+            [
+                {"role": "system", "content": prompts.SYSTEM_REPORT},
+                {
+                    "role": "user",
+                    "content": prompts.build_report_prompt(
+                        project, recent, open_items, digest_text, today
+                    ),
+                },
+            ],
+        )
+        WeeklyReport.objects.create(
+            project=project, content=content, model_used=settings.lm_model
+        )
+        bus.publish("report", project_id=project.pk)
 
     def process_delta(self, job):
         settings = AppSettings.load()

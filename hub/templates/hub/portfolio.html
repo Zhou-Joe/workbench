@@ -1,6 +1,8 @@
 {% extends "hub/base.html" %}
 {% block title %}Portfolio — Ride Program Hub{% endblock %}
 {% block content %}
+{% include "hub/_attention.html" %}
+
 <div class="page-head">
   <h1>Projects</h1>
   {% if not has_root %}

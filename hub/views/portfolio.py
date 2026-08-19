@@ -1,3 +1,5 @@
+from datetime import date
+
 from django.shortcuts import redirect, render
 from django.utils.text import slugify
 
@@ -5,6 +7,8 @@ from .. import workspace
 from ..constants import PHASE_TEMPLATE
 from ..events import bus
 from ..models import AppSettings, Document, Milestone, Project, make_phase
+
+AGING_WARN_DAYS = 14
 
 
 def track_context(project):
@@ -33,13 +37,55 @@ def track_context(project):
     }
 
 
+def attention_context():
+    """Cross-project Now/Next data: pending reviews, aging open items,
+    files awaiting series assignment."""
+    today = date.today()
+    pending_review = list(
+        Milestone.objects.filter(status=Milestone.Status.EXTRACTED)
+        .select_related("phase", "phase__project", "document")
+        .order_by("-date", "-pk")[:15]
+    )
+    open_items = []
+    for m in (
+        Milestone.objects.filter(mtype__in=["issue", "risk", "action"])
+        .exclude(status=Milestone.Status.DISMISSED)
+        .select_related("phase", "phase__project")
+        .order_by("date", "pk")
+    ):
+        base = m.date or m.created_at.date()
+        age = max(0, (today - base).days)
+        level = ""
+        if m.date and m.date < today:
+            level = "over"
+        elif age >= AGING_WARN_DAYS:
+            level = "warn"
+        open_items.append({"m": m, "date": base, "age": age, "level": level})
+    open_items.sort(key=lambda item: -item["age"])
+    unassigned = list(
+        Document.objects.filter(series__isnull=True)
+        .exclude(file_path__contains="/_archive/")
+        .select_related("phase", "phase__project")
+        .order_by("-ingested_at")[:10]
+    )
+    return {
+        "pending_review": pending_review,
+        "open_items": open_items[:15],
+        "unassigned": unassigned,
+    }
+
+
 def home(request):
     projects = Project.objects.prefetch_related("phases").order_by("name")
     tracks = [track_context(p) for p in projects]
     return render(
         request,
         "hub/portfolio.html",
-        {"tracks": tracks, "has_root": bool(AppSettings.load().expanded_workspace_root())},
+        {
+            "tracks": tracks,
+            "has_root": bool(AppSettings.load().expanded_workspace_root()),
+            **attention_context(),
+        },
     )
 
 

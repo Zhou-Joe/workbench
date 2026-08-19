@@ -1,0 +1,38 @@
+{% extends "hub/base.html" %}
+{% block title %}Decisions — {{ project.name }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="crumb"><a href="{% url 'hub:home' %}">Portfolio</a> /
+      <a href="{% url 'hub:project' project.slug %}">{{ project.name }}</a> / Decision log</p>
+    <h1>Decision log</h1>
+    <p class="hint">{{ decisions|length }} decision{{ decisions|length|pluralize }} extracted from this project's documents — newest first.</p>
+  </div>
+</div>
+
+{% if decisions %}
+<table class="ledger-table decisions-table">
+  <thead><tr><th>Date</th><th>Decision</th><th>Basis (quoted from source)</th><th>Source</th><th>Status</th></tr></thead>
+  <tbody>
+    {% for m in decisions %}
+    <tr id="ms-{{ m.pk }}" class="ms status-{{ m.status }}">
+      <td class="num">{% if m.date %}{{ m.date|date:"Y-m-d" }}{% else %}—{% endif %}</td>
+      <td class="ms-title-cell"><div class="ms-title">{{ m.title }}</div>
+        {% if m.notes %}<div class="ms-notes">{{ m.notes }}</div>{% endif %}</td>
+      <td class="ms-evidence">{% if m.evidence %}“{{ m.evidence }}”{% else %}—{% endif %}</td>
+      <td class="ms-source num">
+        {% if m.document %}
+          <span class="phase-num">{{ m.phase.order|stringformat:"02d" }}</span>
+          <a class="doc-open" href="{% url 'hub:preview' %}?path={{ m.document.file_path|urlencode }}" target="_blank">{{ m.document.filename }}</a>
+        {% else %}—{% endif %}
+      </td>
+      <td><span class="status-label">{{ m.status }}</span></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="empty">No decisions recorded yet. They appear here when the pipeline extracts
+  <code>decision</code>-type milestones from your documents and you keep them confirmed.</p>
+{% endif %}
+{% endblock %}

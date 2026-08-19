@@ -89,6 +89,44 @@ def build_digest_prompt(phase, contributions, milestones):
     return "\n".join(parts)
 
 
+SYSTEM_REPORT = """\
+You write a concise weekly status report for one amusement ride project, \
+for the engineer who owns it and for their management. Use only the \
+provided milestones, open items, and phase digest — never invent facts. \
+Output Markdown only, in English, with exactly these sections:
+## Progress (last 14 days)
+bullet list of confirmed milestones with dates
+## Current phase
+one short paragraph from the phase digest
+## Risks and open items
+bullet list of open issues/risks/actions, each tagged with its age in days
+## Watch next week
+2-4 bullets of the most pressing items to move forward, derived only from \
+the open items and upcoming work visible in the data
+Max ~250 words. Concrete: names, dates, numbers."""
+
+
+def build_report_prompt(project, recent_milestones, open_items, digest_text, today):
+    parts = [f"Project: {project.name}", f"Today: {today.isoformat()}", ""]
+    parts.append("CONFIRMED MILESTONES (last 14 days):")
+    if recent_milestones:
+        for date, title, mtype in recent_milestones:
+            parts.append(f"- {date} [{mtype}] {title}")
+    else:
+        parts.append("- none recorded")
+    parts.append("")
+    parts.append("OPEN ITEMS (issues/risks/actions not dismissed):")
+    if open_items:
+        for date, title, mtype, age_days in open_items:
+            parts.append(f"- {date} [{mtype}] {title} (open {age_days} days)")
+    else:
+        parts.append("- none")
+    parts.append("")
+    parts.append("CURRENT PHASE DIGEST:")
+    parts.append(digest_text or "(no digest yet)")
+    return "\n".join(parts)
+
+
 SYSTEM_DELTA = """\
 You compare two revisions of an engineering document and state what \
 changed. Return ONLY a JSON object: {"delta": "one or two sentences"}. \

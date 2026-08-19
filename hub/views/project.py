@@ -178,3 +178,60 @@ def project_rescan(request, slug):
 
     messages.success(request, notice)
     return _redirect_project(project)
+
+
+def project_decisions(request, slug):
+    """Decision register: every confirmed/extracted decision, newest first."""
+    project = get_object_or_404(Project, slug=slug)
+    decisions = (
+        Milestone.objects.filter(project=project, mtype=Milestone.MType.DECISION)
+        .exclude(status=Milestone.Status.DISMISSED)
+        .select_related("phase", "document")
+        .order_by("-date", "-pk")
+    )
+    return render(
+        request,
+        "hub/decisions.html",
+        {"project": project, "decisions": decisions},
+    )
+
+
+def project_report(request, slug):
+    """Weekly report: latest generated report + generate button."""
+    from django.shortcuts import redirect
+
+    from ..models import ExtractionJob
+
+    project = get_object_or_404(Project, slug=slug)
+    if request.method == "POST":
+        ExtractionJob.objects.get_or_create(
+            project=project,
+            kind=ExtractionJob.Kind.REPORT,
+            status=ExtractionJob.Status.QUEUED,
+        )
+        return redirect("hub:project_report", slug=slug)
+    latest = project.reports.first()
+    generating = ExtractionJob.objects.filter(
+        project=project,
+        kind=ExtractionJob.Kind.REPORT,
+        status__in=[ExtractionJob.Status.QUEUED, ExtractionJob.Status.RUNNING],
+    ).exists()
+    failed = (
+        ExtractionJob.objects.filter(
+            project=project,
+            kind=ExtractionJob.Kind.REPORT,
+            status=ExtractionJob.Status.FAILED,
+        )
+        .order_by("-pk")
+        .first()
+    )
+    return render(
+        request,
+        "hub/report.html",
+        {
+            "project": project,
+            "report": latest,
+            "generating": generating,
+            "failed_error": failed.error if failed else "",
+        },
+    )

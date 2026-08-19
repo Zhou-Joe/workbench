@@ -1,0 +1,71 @@
+{% load rph_extras %}
+<section class="attention" id="attention"
+         hx-get="{% url 'hub:home' %}"
+         hx-select="#attention"
+         hx-swap="outerHTML"
+         hx-trigger="rph:tick from:body, every 60s">
+  <div class="section-head">
+    <h1>Now / Next</h1>
+    <span class="hint">what needs your attention across all projects</span>
+  </div>
+
+  {% if pending_review %}
+  <div class="panel panel-warn">
+    <div class="section-head">
+      <h2>To review</h2>
+      <span class="hint">extracted milestones awaiting your confirmation</span>
+    </div>
+    <table class="ledger-table">
+      <thead><tr><th>Date</th><th>Type</th><th>Milestone</th><th>Source</th><th>Status</th></tr></thead>
+      <tbody>
+        {% for m in pending_review %}{% include "hub/_milestone_row.html" %}{% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+  {% if open_items %}
+  <div class="panel">
+    <div class="section-head">
+      <h2>Open issues · risks · actions</h2>
+      <span class="hint">oldest first — red means the date has passed, orange means open ≥ 14 days</span>
+    </div>
+    <table class="ledger-table">
+      <thead><tr><th>Date</th><th>Age</th><th>Type</th><th>Item</th><th>Project</th></tr></thead>
+      <tbody>
+        {% for item in open_items %}
+        <tr>
+          <td class="num">{{ item.date|date:"Y-m-d" }}</td>
+          <td><span class="badge {% if item.level == 'over' %}badge-over{% elif item.level == 'warn' %}badge-warn{% endif %}">{{ item.age }}d</span></td>
+          <td><span class="mtype mtype-{{ item.m.mtype }}">{{ item.m.mtype }}</span></td>
+          <td>{{ item.m.title }}</td>
+          <td><a href="{% url 'hub:project' item.m.project.slug %}">{{ item.m.project.name }}</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+  {% if unassigned %}
+  <div class="panel">
+    <div class="section-head">
+      <h2>Files awaiting assignment</h2>
+      <span class="hint">confirm which revision they supersede to build the timeline</span>
+    </div>
+    <ul class="unassigned-mini">
+      {% for doc in unassigned %}
+      <li>
+        <span class="doc-name">{{ doc.filename }}</span>
+        <span class="dim num">{% if doc.location %}<code>{{ doc.location }}</code> · {% endif %}{{ doc.phase.project.name }}</span>
+        <a class="mini" href="{% url 'hub:phase' doc.phase.project.slug doc.phase.order %}">assign →</a>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  {% if not pending_review and not open_items and not unassigned %}
+  <p class="empty">Nothing needs your attention. Drop files into project folders to keep the timeline building.</p>
+  {% endif %}
+</section>

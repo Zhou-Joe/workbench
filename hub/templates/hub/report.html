@@ -1,0 +1,40 @@
+{% extends "hub/base.html" %}
+{% block title %}Weekly report — {{ project.name }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="crumb"><a href="{% url 'hub:home' %}">Portfolio</a> /
+      <a href="{% url 'hub:project' project.slug %}">{{ project.name }}</a> / Weekly report</p>
+    <h1>Weekly report</h1>
+    <p class="hint">{% if report %}generated {{ report.created_at|date:"Y-m-d H:i" }} · model {{ report.model_used }}{% else %}not generated yet{% endif %}</p>
+  </div>
+  <div class="page-head-actions">
+    <form method="post" action="{% url 'hub:project_report' project.slug %}">
+      {% csrf_token %}
+      <button type="submit" class="primary" {% if generating %}disabled{% endif %}>
+        {% if generating %}Generating…{% else %}Generate report{% endif %}
+      </button>
+    </form>
+  </div>
+</div>
+
+<div id="report-body"
+     {% if generating %}hx-get="{% url 'hub:project_report' project.slug %}" hx-select="#report-wrap" hx-swap="outerHTML" hx-trigger="rph:tick from:body, every 5s"{% endif %}>
+  <div id="report-wrap">
+    {% if generating %}
+    <p class="empty">The LLM is writing the report from your milestones and open items — this page updates automatically when it's done.</p>
+    {% endif %}
+
+    {% if failed_error %}
+    <p class="form-error">Last generation failed: {{ failed_error }}. Is LM Studio running?</p>
+    {% endif %}
+
+    {% if report and report.content %}
+    <article class="report-body">{{ report.content|linebreaks }}</article>
+    {% elif not generating %}
+    <p class="empty">No report yet. Click “Generate report” — it summarizes the last 14 days of confirmed
+      milestones, the current phase digest, and every open issue / risk / action.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

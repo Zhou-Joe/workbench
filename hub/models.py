@@ -225,6 +225,7 @@ class ExtractionJob(models.Model):
         LLM = "llm"
         DIGEST = "digest"
         DELTA = "delta"
+        REPORT = "report"
 
     class Status(models.TextChoices):
         QUEUED = "queued"
@@ -248,6 +249,9 @@ class ExtractionJob(models.Model):
     )
     phase = models.ForeignKey(
         Phase, on_delete=models.CASCADE, related_name="digest_jobs", null=True, blank=True
+    )
+    project = models.ForeignKey(
+        Project, on_delete=models.CASCADE, related_name="report_jobs", null=True, blank=True
     )
     kind = models.CharField(max_length=8, choices=Kind)
     status = models.CharField(
@@ -279,6 +283,22 @@ class ArchiveMove(models.Model):
 
     def __str__(self):
         return f"{self.from_path} -> {self.to_path}"
+
+
+class WeeklyReport(models.Model):
+    project = models.ForeignKey(
+        Project, on_delete=models.CASCADE, related_name="reports"
+    )
+    content = models.TextField(blank=True, help_text="Markdown report body")
+    model_used = models.CharField(max_length=200, blank=True)
+    error = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"report {self.project} {self.created_at:%Y-%m-%d}"
 
 
 class AppSettings(models.Model):

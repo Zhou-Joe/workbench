@@ -9,6 +9,13 @@ urlpatterns = [
     path("project/new/", views.project_create, name="project_create"),
     path("project/<slug>/", views.project_detail, name="project"),
     path("project/<slug>/rescan/", views.project_rescan, name="project_rescan"),
+    path(
+        "project/<slug>/decisions/",
+        views.project_decisions,
+        name="project_decisions",
+    ),
+    path("project/<slug>/report/", views.project_report, name="project_report"),
+    path("search/", views.search, name="search"),
     path("project/<slug>/phases/add/", views.phase_add, name="phase_add"),
     path(
         "project/<slug>/phase/<int:phase_id>/rename/",

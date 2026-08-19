@@ -14,6 +14,9 @@
   <div class="masthead-inner">
     <a class="wordmark" href="{% url 'hub:home' %}">RIDE&nbsp;PROGRAM&nbsp;HUB<span class="wordmark-rule"></span></a>
     <span id="activity" class="activity" aria-live="polite"></span>
+    <form class="masthead-search" action="{% url 'hub:search' %}" method="get">
+      <input type="search" name="q" placeholder="Search documents…" value="{{ request.GET.q }}" aria-label="Search documents">
+    </form>
     <nav class="masthead-nav">
       <a href="{% url 'hub:home' %}">Portfolio</a>
       <a href="{% url 'hub:settings' %}">Settings</a>

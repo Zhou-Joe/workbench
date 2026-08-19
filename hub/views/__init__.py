@@ -3,9 +3,12 @@ from .project import (
     phase_add,
     phase_rename,
     phase_move,
+    project_decisions,
     project_detail,
+    project_report,
     project_rescan,
 )
+from .search import search
 from .phase import phase_detail, phase_folder_new
 from .upload import phase_upload
 from .docs import (
@@ -25,6 +28,9 @@ __all__ = [
     "home",
     "project_create",
     "project_detail",
+    "project_decisions",
+    "project_report",
+    "search",
     "phase_add",
     "phase_rename",
     "phase_move",

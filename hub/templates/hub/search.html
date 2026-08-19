@@ -1,0 +1,42 @@
+{% extends "hub/base.html" %}
+{% block title %}Search — Ride Program Hub{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="crumb"><a href="{% url 'hub:home' %}">Portfolio</a> / Search</p>
+    <h1>Search</h1>
+  </div>
+</div>
+
+<form class="search-big" action="{% url 'hub:search' %}" method="get">
+  <input type="search" name="q" value="{{ q }}" placeholder="Search all extracted documents — filenames and full text…" autofocus>
+  <button type="submit" class="primary">Search</button>
+</form>
+
+{% if performed %}
+<p class="hint">{{ total_shown }} result{{ total_shown|pluralize }} for “{{ q }}”{% if total_shown == 50 %} (showing first 50){% endif %}</p>
+{% endif %}
+
+{% if performed and results %}
+<ol class="search-results">
+  {% for r in results %}
+  <li class="search-hit">
+    <div class="search-hit-head">
+      <a class="doc-open" href="{% url 'hub:preview' %}?path={{ r.doc.file_path|urlencode }}" target="_blank">{{ r.doc.filename }}</a>
+      <span class="dim num">
+        {% if r.doc.location %}{{ r.doc.location }}/ · {% endif %}
+        <a href="{% url 'hub:project' r.doc.phase.project.slug %}">{{ r.doc.phase.project.name }}</a>
+        · {{ r.doc.phase.order|stringformat:"02d" }} {{ r.doc.phase.name }}
+      </span>
+    </div>
+    {% if r.snippet %}<p class="search-snippet">{{ r.snippet }}</p>
+    {% else %}<p class="search-snippet dim">filename match — no extracted text</p>{% endif %}
+  </li>
+  {% endfor %}
+</ol>
+{% elif performed %}
+<p class="empty">No documents match. Only files that have been extracted are searchable — check the phase view if a file is still “pending”.</p>
+{% else %}
+<p class="empty">Type a keyword (at least 2 characters) — decision titles, vendor names, equipment, dates… Everything the pipeline has extracted is searchable.</p>
+{% endif %}
+{% endblock %}
