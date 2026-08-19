@@ -43,7 +43,7 @@ def ask_folder(request, project_slug, order):
             question=question, kind=ExtractionJob.Kind.ASK
         )
         bus.publish("ask", question_id=question.pk)
-    return _folder_ask_area(phase, folder_path)
+    return _folder_ask_area(request, phase, folder_path)
 
 
 def _current_folder_path(request, phase):
@@ -61,7 +61,7 @@ def _current_folder_path(request, phase):
         return ""
 
 
-def _folder_ask_area(phase, folder_path):
+def _folder_ask_area(request, phase, folder_path):
     questions = list(
         Question.objects.filter(project=phase.project, folder_path=folder_path)[:3]
     )

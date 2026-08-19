@@ -139,6 +139,8 @@ class FolderAskTests(WorkspaceTestCase):
 
         project = self.seed_project()
         phase = project.phases.get(order=1)
+        # the scoped folder must exist on disk for scope resolution
+        (self.phase_dir(project, 1) / "01-incoming").mkdir(exist_ok=True)
         Document.objects.create(
             phase=phase,
             file_path=f"{project.slug}/01-phase-1/01-incoming/inside.txt",

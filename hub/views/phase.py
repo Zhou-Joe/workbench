@@ -233,7 +233,7 @@ def phase_detail(request, project_slug, order):
     # folder-scoped ask panel
     folder_questions = []
     if phase_dir_path:
-        from .models import Question
+        from ..models import Question
 
         prefix = f"{project.slug}/{phase.folder_name}"
         folder_path_ws = f"{prefix}/{current}" if current else prefix
