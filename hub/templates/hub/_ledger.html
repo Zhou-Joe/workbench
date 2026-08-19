@@ -1,0 +1,39 @@
+<div class="ledger" id="ledger"
+     hx-get="{% url 'hub:project' project.slug %}"
+     hx-select="#ledger"
+     hx-swap="outerHTML"
+     hx-trigger="rph:tick from:body, every 45s">
+  {% if notice %}<p class="scan-notice">{{ notice }}</p>{% endif %}
+  <form class="ledger-filters" hx-get="{% url 'hub:project' project.slug %}"
+        hx-target="#ledger" hx-select="#ledger" hx-swap="outerHTML">
+    <select name="phase">
+      <option value="">all phases</option>
+      {% for ph in phases %}<option value="{{ ph.slug }}" {% if phase_filter == ph.slug %}selected{% endif %}>{{ ph.order|stringformat:"02d" }} {{ ph.name }}</option>{% endfor %}
+    </select>
+    <select name="type">
+      <option value="">all types</option>
+      {% for value, label in type_choices %}<option value="{{ value }}" {% if type_filter == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+    <select name="status">
+      <option value="">active</option>
+      {% for value, label in status_choices %}<option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+    <button type="submit">Filter</button>
+    {% if phase_filter or type_filter or status_filter %}
+    <a class="reset" href="{% url 'hub:project' project.slug %}">reset</a>
+    {% endif %}
+  </form>
+
+  <table class="ledger-table">
+    <thead>
+      <tr><th>Date</th><th>Type</th><th>Milestone</th><th>Source</th><th>Status</th></tr>
+    </thead>
+    <tbody>
+      {% for m in milestones %}
+        {% include "hub/_milestone_row.html" %}
+      {% empty %}
+      <tr><td colspan="5" class="empty">No milestones{% if phase_filter or type_filter or status_filter %} for this filter{% endif %}. They appear here after you drop documents into phase folders and the extraction pipeline runs.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>

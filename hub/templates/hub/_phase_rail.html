@@ -1,0 +1,50 @@
+{% load rph_extras %}
+<div class="phase-rail-wrap" id="phase-rail-wrap"
+     hx-get="{% url 'hub:project' project.slug %}"
+     hx-select="#phase-rail-wrap"
+     hx-swap="outerHTML"
+     hx-trigger="rph:tick from:body, every 60s">
+  <ol class="phase-rail">
+    {% for ph in phases %}
+    <li class="phase-cell {% if phase and phase.pk == ph.pk %}is-here{% endif %}">
+      <a class="phase-cell-main" href="{% url 'hub:phase' project.slug ph.order %}">
+        <span class="numeral">{{ ph.order|stringformat:"02d" }}</span>
+        <span class="phase-cell-name">{{ ph.name }}</span>
+        <span class="phase-cell-counts">
+          <span class="mini">{{ docs_by_phase|get_item:ph.pk }} doc{{ docs_by_phase|get_item:ph.pk|pluralize }}</span>
+          {% if unassigned_by_phase|get_item:ph.pk %}
+          <span class="mini mini-warn">{{ unassigned_by_phase|get_item:ph.pk }} unassigned</span>
+          {% endif %}
+          {% if pending_by_phase|get_item:ph.pk %}
+          <span class="mini mini-warn">{{ pending_by_phase|get_item:ph.pk }} to review</span>
+          {% endif %}
+        </span>
+      </a>
+      <form class="phase-move" hx-post="{% url 'hub:phase_move' project.slug ph.pk %}"
+            hx-target="#phase-rail-wrap" hx-select="#phase-rail-wrap" hx-swap="outerHTML">
+        <button name="direction" value="up" aria-label="Move phase up" {% if forloop.first %}disabled{% endif %}>↑</button>
+        <button name="direction" value="down" aria-label="Move phase down" {% if forloop.last %}disabled{% endif %}>↓</button>
+      </form>
+    </li>
+    {% endfor %}
+    <li class="phase-cell phase-cell-new">
+      <details>
+        <summary>Add phase</summary>
+        <form hx-post="{% url 'hub:phase_add' project.slug %}"
+              hx-target="#phase-rail-wrap" hx-select="#phase-rail-wrap" hx-swap="outerHTML">
+          <label>Name <input type="text" name="name" required></label>
+          <label>Position
+            <select name="position">
+              <option value="end">after all phases</option>
+              {% for ph in phases %}
+              <option value="after:{{ ph.order }}">between {{ ph.order|stringformat:"02d" }} and {{ ph.order|add:1|stringformat:"02d" }}</option>
+              {% endfor %}
+            </select>
+          </label>
+          <label>Extraction focus <input type="text" name="extraction_focus" placeholder="what to look for in this phase"></label>
+          <button type="submit" class="primary">Add</button>
+        </form>
+      </details>
+    </li>
+  </ol>
+</div>

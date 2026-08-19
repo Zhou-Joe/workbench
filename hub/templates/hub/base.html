@@ -1,0 +1,32 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Ride Program Hub{% endblock %}</title>
+<link rel="stylesheet" href="{% static 'hub/css/main.css' %}">
+<script src="{% static 'hub/js/htmx.min.js' %}" defer></script>
+<script src="{% static 'hub/js/app.js' %}" defer></script>
+</head>
+<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+<header class="masthead">
+  <div class="masthead-inner">
+    <a class="wordmark" href="{% url 'hub:home' %}">RIDE&nbsp;PROGRAM&nbsp;HUB<span class="wordmark-rule"></span></a>
+    <span id="activity" class="activity" aria-live="polite"></span>
+    <nav class="masthead-nav">
+      <a href="{% url 'hub:home' %}">Portfolio</a>
+      <a href="{% url 'hub:settings' %}">Settings</a>
+      <a href="/admin/" target="_blank">Admin</a>
+    </nav>
+  </div>
+</header>
+{% if messages %}
+<ul class="messages">
+  {% for message in messages %}<li class="{{ message.tags }}">{{ message }}</li>{% endfor %}
+</ul>
+{% endif %}
+<main class="page">
+{% block content %}{% endblock %}
+</main>
+</body>
+</html>

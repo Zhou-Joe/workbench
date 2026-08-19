@@ -1,0 +1,44 @@
+<tr id="ms-{{ m.pk }}" class="ms status-{{ m.status }}">
+  <td class="num">{% if m.date %}{{ m.date|date:"Y-m-d" }}{% else %}—{% endif %}</td>
+  <td><span class="mtype mtype-{{ m.mtype }}">{{ m.mtype }}</span></td>
+  <td class="ms-title-cell">
+    <div class="ms-title">{{ m.title }}</div>
+    {% if m.evidence and m.status == "extracted" %}<div class="ms-evidence">“{{ m.evidence }}</div>{% endif %}
+    {% if m.notes %}<div class="ms-notes">{{ m.notes }}</div>{% endif %}
+    {% if m.status == "extracted" %}
+    <details class="ms-edit">
+      <summary>Edit</summary>
+      <form hx-post="{% url 'hub:milestone_edit' m.pk %}" hx-swap="none">
+        <label>Title <input type="text" name="title" value="{{ m.title }}" required></label>
+        <label>Date <input type="date" name="date" value="{{ m.date|date:'Y-m-d' }}"></label>
+        <label>Type
+          <select name="mtype">{% for value, label in m.MType.choices %}<option value="{{ value }}" {% if m.mtype == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+        </label>
+        <label>Notes <input type="text" name="notes" value="{{ m.notes }}"></label>
+        <button type="submit">Save</button>
+      </form>
+    </details>
+    {% endif %}
+  </td>
+  <td class="ms-source num">
+    {% if m.document %}
+      <span class="phase-num">{% if m.phase %}{{ m.phase.order|stringformat:"02d" }}{% endif %}</span>
+      {{ m.document.filename }}
+    {% else %}—{% endif %}
+  </td>
+  <td class="ms-actions">
+    {% if m.status == "extracted" %}
+      <button class="primary" hx-post="{% url 'hub:milestone_action' m.pk %}"
+              hx-vals='{"action": "confirm"}' hx-swap="none">Confirm</button>
+      <button hx-post="{% url 'hub:milestone_action' m.pk %}"
+              hx-vals='{"action": "dismiss"}' hx-swap="none">Dismiss</button>
+      {% if m.confidence %}<span class="conf">{{ m.confidence|floatformat:2 }}</span>{% endif %}
+    {% elif m.status == "dismissed" %}
+      <span class="status-label">dismissed</span>
+      <button hx-post="{% url 'hub:milestone_action' m.pk %}"
+              hx-vals='{"action": "restore"}' hx-swap="none">Restore</button>
+    {% else %}
+      <span class="status-label">{{ m.status }}</span>
+    {% endif %}
+  </td>
+</tr>

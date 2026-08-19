@@ -1,0 +1,29 @@
+{% extends "hub/base.html" %}
+{% block title %}{{ project.name }} — Ride Program Hub{% endblock %}
+{% block content %}
+<div class="page-head project-head">
+  <div>
+    <p class="crumb"><a href="{% url 'hub:home' %}">Portfolio</a> / {{ project.name }}</p>
+    <h1>{{ project.name }}</h1>
+    <p class="project-sub">
+      {% if project.code %}{{ project.code }} · {% endif %}{{ phases|length }} phases
+      {% if project.description %} · {{ project.description }}{% endif %}
+    </p>
+  </div>
+  <div class="page-head-actions">
+    <button hx-post="{% url 'hub:project_rescan' project.slug %}"
+            hx-target="#ledger" hx-select="#ledger" hx-swap="outerHTML"
+            class="primary">Rescan folders</button>
+  </div>
+</div>
+
+{% include "hub/_phase_rail.html" %}
+
+<section class="ledger-wrap">
+  <div class="section-head">
+    <h2>Milestone ledger</h2>
+    <span class="hint">Chronological record extracted from your documents. Newest first.</span>
+  </div>
+  {% include "hub/_ledger.html" %}
+</section>
+{% endblock %}

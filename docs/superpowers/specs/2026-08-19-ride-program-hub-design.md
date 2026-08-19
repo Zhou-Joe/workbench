@@ -127,8 +127,8 @@ New/changed file → Document row → background job. Three extraction tiers:
 
 | Tier | Inputs | Engine |
 |---|---|---|
-| mineru | PDFs (text or scanned), images, DOCX/PPTX/XLSX | MinerU 3.x (`pip install mineru`), invoked via CLI, Markdown output |
-| native / email | same Office formats when MinerU unavailable or failed; `.eml`; `.msg` via extract-msg | python-docx / python-pptx / openpyxl / stdlib email / extract-msg |
+| mineru | PDFs (text or scanned), images | MinerU 3.x (`pip install mineru`), invoked via CLI, Markdown output; falls back to pypdf (text-layer PDFs) then metadata |
+| native / email | DOCX/PPTX/XLSX (native-first: lossless and instant); `.eml`; `.msg` via extract-msg | python-docx / python-pptx / openpyxl / stdlib email / extract-msg |
 | metadata | native CAD (.dwg, .rvt, .step, …) and anything else unreadable | filename, date, size only; flagged low-confidence |
 
 Fallback rule: if MinerU is not installed or errors on a file, the pipeline

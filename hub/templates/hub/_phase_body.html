@@ -1,0 +1,109 @@
+{% load rph_extras %}
+<div class="phase-body" id="phase-body"
+     hx-get="{% url 'hub:phase' project.slug phase.order %}"
+     hx-select="#phase-body"
+     hx-swap="outerHTML"
+     hx-trigger="rph:tick from:body, every 30s">
+
+  {% if unassigned %}
+  <section class="panel panel-warn">
+    <div class="section-head">
+      <h2>New files awaiting assignment</h2>
+      <span class="hint">Confirm what each file supersedes — or start a new series.</span>
+    </div>
+    {% for doc in unassigned %}
+      {% include "hub/_unassigned_card.html" with doc=doc suggestions=suggestions|get_item:doc.pk %}
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  {% if pending_milestones %}
+  <section class="panel">
+    <div class="section-head">
+      <h2>Milestones to review</h2>
+      <span class="hint">Extracted from this phase's documents — confirm, correct, or dismiss.</span>
+    </div>
+    <table class="ledger-table">
+      <thead><tr><th>Date</th><th>Type</th><th>Milestone</th><th>Source</th><th>Status</th></tr></thead>
+      <tbody>
+        {% for m in pending_milestones %}{% include "hub/_milestone_row.html" %}{% endfor %}
+      </tbody>
+    </table>
+  </section>
+  {% endif %}
+
+  <section class="panel">
+    <div class="section-head">
+      <h2>Phase digest</h2>
+      <span class="hint">{% if digest %}model {{ digest.model_used }}, updated {{ digest.updated_at|date:"Y-m-d H:i" }}{% else %}regenerates as documents land and milestones are confirmed{% endif %}</span>
+    </div>
+    {% if digest and digest.content %}
+    <div class="digest">{{ digest.content|linebreaks }}</div>
+    {% else %}
+    <p class="empty">No digest yet.</p>
+    {% endif %}
+  </section>
+
+  <section class="panel">
+    <div class="section-head">
+      <h2>Current documents</h2>
+      <span class="hint">Latest revisions at the phase root. Superseded files move to <code>_archive/</code>.</span>
+    </div>
+    {% if current_docs %}
+    <table class="doc-table">
+      <thead><tr><th>File</th><th>Series</th><th>Rev</th><th>Size</th><th>Tier</th><th>Status</th></tr></thead>
+      <tbody>
+        {% for doc in current_docs %}
+        <tr>
+          <td class="doc-name" title="{{ doc.file_path }}">
+            {{ doc.filename }}
+            {% if doc.quality_note %}<span class="flag" title="{{ doc.quality_note }}">⚑</span>{% endif %}
+            {% if doc.series_id %}<button class="linkish"
+              hx-get="{% url 'hub:series_stack' doc.series_id %}"
+              hx-target="#series-stack" hx-swap="innerHTML">history</button>{% endif %}
+          </td>
+          <td>{% if doc.series %}{{ doc.series.title }}{% else %}<span class="dim">unassigned</span>{% endif %}</td>
+          <td class="num">{% if doc.revision_number %}{{ doc.revision_number }}{% else %}—{% endif %}</td>
+          <td class="num">{{ doc.size_bytes|filesizeformat }}</td>
+          <td><span class="tier tier-{{ doc.extraction_tier }}">{{ doc.extraction_tier|default:"—" }}</span></td>
+          <td><span class="ext-status ext-{{ doc.extraction_status }}">{{ doc.extraction_status }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="empty">No current documents. Drop files into this phase's folder:
+      <code>{{ phase.folder_name }}/</code></p>
+    {% endif %}
+    <div id="series-stack"></div>
+  </section>
+
+  {% if archived %}
+  <section class="panel">
+    <details>
+      <summary>Archived revisions ({{ archived|length }})</summary>
+      <table class="doc-table">
+        <thead><tr><th>File</th><th>Series</th><th>Rev</th><th>Archived</th><th></th></tr></thead>
+        <tbody>
+          {% for doc in archived %}
+          <tr class="dim">
+            <td class="doc-name">{{ doc.filename }}</td>
+            <td>{% if doc.series %}{{ doc.series.title }}{% else %}—{% endif %}</td>
+            <td class="num">{% if doc.revision_number %}{{ doc.revision_number }}{% else %}—{% endif %}</td>
+            <td class="num">{{ doc.ingested_at|date:"Y-m-d" }}</td>
+            <td>
+              {% for move in doc.moves.all %}
+                {% if not move.undone %}
+                <button hx-post="{% url 'hub:undo_archive' move.pk %}"
+                        hx-target="#phase-body" hx-select="#phase-body" hx-swap="outerHTML">Undo archive</button>
+                {% endif %}
+              {% endfor %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </details>
+  </section>
+  {% endif %}
+</div>

@@ -1,0 +1,45 @@
+{% extends "hub/base.html" %}
+{% block title %}Portfolio — Ride Program Hub{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Projects</h1>
+  {% if not has_root %}
+  <p class="hint">Set your workspace root folder on the
+    <a href="{% url 'hub:settings' %}">Settings</a> screen before creating projects.</p>
+  {% endif %}
+</div>
+
+<details class="new-project" open="{% if not tracks %}true{% endif %}">
+  <summary>New project</summary>
+  <form id="create-project-form"
+        hx-post="{% url 'hub:project_create' %}"
+        hx-target="#tracks"
+        hx-swap="afterbegin"
+        hx-on::after-request="if(event.detail.successful) this.reset()">
+    <div class="form-grid">
+      <label>Name
+        <input type="text" name="name" required placeholder="e.g. Cosmic Coaster — Phase II">
+      </label>
+      <label>Code
+        <input type="text" name="code" placeholder="CC2">
+      </label>
+      <label class="span2">Notes
+        <input type="text" name="description" placeholder="One line of context (optional)">
+      </label>
+      <button type="submit" class="primary">Create project</button>
+    </div>
+  </form>
+</details>
+
+<div id="tracks" class="tracks"
+     hx-get="{% url 'hub:home' %}"
+     hx-select="#tracks"
+     hx-swap="outerHTML"
+     hx-trigger="rph:tick from:body, every 60s">
+  {% for track in tracks %}
+    {% include "hub/_track.html" with project=track.project phases=track.phases current=track.current latest=track.latest open_issues=track.open_issues pending=track.pending doc_count=track.doc_count %}
+  {% empty %}
+  <p class="empty">No projects yet. Create one above — it scaffolds the six design-phase folders.</p>
+  {% endfor %}
+</div>
+{% endblock %}

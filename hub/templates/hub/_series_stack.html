@@ -1,0 +1,22 @@
+<div class="series-stack">
+  <div class="series-stack-head">
+    <h3>{{ series.title }}</h3>
+    <span class="hint">{{ stack|length }} revision{{ stack|length|pluralize }} — newest at the bottom</span>
+    <button class="linkish"
+            hx-post="{% url 'hub:series_delta' series.pk %}"
+            hx-target="#series-stack" hx-swap="innerHTML">
+      {% if delta_queued %}delta summary pending…{% else %}summarize changes{% endif %}
+    </button>
+  </div>
+  <ol class="stack-list">
+    {% for doc in stack %}
+    <li class="{% if doc.is_latest %}stack-latest{% endif %}">
+      <span class="num rev">r{{ doc.revision_number|default:"—" }}</span>
+      <span class="num">{{ doc.ingested_at|date:"Y-m-d" }}</span>
+      <span class="doc-name">{{ doc.filename }}</span>
+      {% if doc.is_latest %}<span class="chip">latest</span>{% endif %}
+      {% if doc.delta_summary %}<span class="delta">{{ doc.delta_summary }}</span>{% endif %}
+    </li>
+    {% endfor %}
+  </ol>
+</div>

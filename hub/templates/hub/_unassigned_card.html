@@ -1,0 +1,34 @@
+<div class="unassigned-card" id="unassigned-{{ doc.pk }}">
+  <div class="unassigned-file">
+    <span class="doc-name">{{ doc.filename }}</span>
+    <span class="dim num">{{ doc.size_bytes|filesizeformat }} · {{ doc.doc_kind }}</span>
+    <span class="ext-status ext-{{ doc.extraction_status }}">{{ doc.extraction_status }}</span>
+  </div>
+  {% if suggestions %}
+  <div class="unassigned-suggest">
+    <span class="hint">Supersedes which previous revision?</span>
+    {% for cand in suggestions %}
+    <form class="suggest-row"
+          hx-post="{% url 'hub:assign_predecessor' doc.pk %}"
+          hx-target="#phase-body" hx-select="#phase-body" hx-swap="outerHTML">
+      <input type="hidden" name="predecessor_id" value="{{ cand.pk }}">
+      <button type="submit">
+        <span class="num">{{ cand.ingested_at|date:"Y-m-d" }}</span>
+        {{ cand.filename }}
+        {% if cand.series %}<span class="dim"> · {{ cand.series.title }}</span>{% endif %}
+      </button>
+    </form>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="hint">No similar earlier files in this phase.</p>
+  {% endif %}
+  <form class="unassigned-new"
+        hx-post="{% url 'hub:assign_new_series' doc.pk %}"
+        hx-target="#phase-body" hx-select="#phase-body" hx-swap="outerHTML">
+    <label>Start a new series:
+      <input type="text" name="title" placeholder="e.g. Ride Control System IFC Package">
+    </label>
+    <button type="submit">Create series</button>
+  </form>
+</div>

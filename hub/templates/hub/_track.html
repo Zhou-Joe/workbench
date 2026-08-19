@@ -1,0 +1,36 @@
+<article class="track" id="track-{{ project.slug }}">
+  <a class="track-main" href="{% url 'hub:project' project.slug %}">
+    <span class="numeral">{% if current %}{{ current.order|stringformat:"02d" }}{% else %}—{% endif %}</span>
+    <span class="track-id">
+      <span class="track-name">{{ project.name }}</span>
+      <span class="track-meta">
+        {% if project.code %}{{ project.code }} · {% endif %}
+        {{ doc_count }} document{{ doc_count|pluralize }}
+        {% if current %} · in {{ current.order|stringformat:"02d" }} {{ current.name }}{% endif %}
+      </span>
+    </span>
+    <span class="track-phasebar" aria-hidden="true">
+      {% for ph in phases %}
+        <span class="seg {% if current and ph.order <= current.order %}seg-done{% endif %}"></span>
+      {% endfor %}
+    </span>
+  </a>
+  <div class="track-side">
+    {% if pending %}
+    <a class="count count-warn" href="{% url 'hub:project' project.slug %}?status=extracted">{{ pending }} to review</a>
+    {% endif %}
+    {% if open_issues %}
+    <a class="count" href="{% url 'hub:project' project.slug %}?type=issue">{{ open_issues }} open issue{{ open_issues|pluralize }}</a>
+    {% endif %}
+    <ul class="track-latest">
+      {% for m in latest %}
+      <li>
+        <time>{% if m.date %}{{ m.date|date:"Y-m-d" }}{% else %}—{% endif %}</time>
+        <span class="mtype mtype-{{ m.mtype }}">{{ m.mtype }}</span>
+        <span class="track-latest-title">{{ m.title }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+</article>
+{% if scaffold_warning %}<p class="hint">{{ scaffold_warning }}</p>{% endif %}

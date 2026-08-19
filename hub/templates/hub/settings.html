@@ -1,0 +1,76 @@
+{% extends "hub/base.html" %}
+{% block title %}Settings — Ride Program Hub{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="crumb"><a href="{% url 'hub:home' %}">Portfolio</a> / Settings</p>
+    <h1>Settings</h1>
+  </div>
+</div>
+
+<div class="settings-grid" id="settings-wrap">
+  <form class="panel" method="post" action="{% url 'hub:settings' %}"
+        hx-post="{% url 'hub:settings' %}" hx-target="#settings-wrap" hx-select="#settings-wrap" hx-swap="outerHTML">
+    {% csrf_token %}
+    <div class="section-head">
+      <h2>Workspace</h2>
+      <span class="hint">Your folders stay yours — the app only reads and (for archival) moves files.</span>
+    </div>
+    <div class="form-grid">
+      <label class="span2">Workspace root
+        <input type="text" name="workspace_root" value="{{ settings.workspace_root }}" placeholder="~/RideProjects">
+      </label>
+      <label>Archive mode
+        <select name="archive_mode">
+          <option value="move" {% if settings.archive_mode == "move" %}selected{% endif %}>move superseded files to _archive/</option>
+          <option value="db_only" {% if settings.archive_mode == "db_only" %}selected{% endif %}>database only — never touch files</option>
+        </select>
+      </label>
+      <label class="check">Watch folders
+        <input type="checkbox" name="watch_enabled" {% if settings.watch_enabled %}checked{% endif %}>
+      </label>
+    </div>
+
+    <div class="section-head">
+      <h2>LLM — LM Studio</h2>
+      <span class="hint">Start LM Studio's local server (Developer tab → Start Server), load a model, and set it here.</span>
+    </div>
+    <div class="form-grid">
+      <label>Base URL
+        <input type="text" name="lm_base_url" value="{{ settings.lm_base_url }}">
+      </label>
+      <label>Model
+        <input type="text" name="lm_model" value="{{ settings.lm_model }}" placeholder="as named in LM Studio">
+      </label>
+      <label>Temperature
+        <input type="number" name="lm_temperature" value="{{ settings.lm_temperature }}" step="0.1" min="0" max="2">
+      </label>
+      <label>Max tokens
+        <input type="number" name="lm_max_tokens" value="{{ settings.lm_max_tokens }}" min="256">
+      </label>
+    </div>
+
+    <div class="section-head">
+      <h2>Extraction — MinerU</h2>
+      <span class="hint">{% if mineru_ok %}MinerU detected.{% else %}Not detected — PDFs fall back to fast text extraction; scanned pages stay unextracted until you install it.{% endif %}
+        Install: <code>pip install -U mineru</code> then run <code>mineru-models-download</code> once.</span>
+    </div>
+    <div class="form-grid">
+      <label>Executable
+        <input type="text" name="mineru_path" value="{{ settings.mineru_path }}">
+      </label>
+      <label>Timeout (seconds)
+        <input type="number" name="mineru_timeout" value="{{ settings.mineru_timeout }}" min="30">
+      </label>
+    </div>
+    <button type="submit" class="primary">Save settings</button>
+  </form>
+
+  <aside class="panel">
+    <div class="section-head"><h2>LM Studio connection</h2></div>
+    <div hx-get="{% url 'hub:lm_status' %}" hx-trigger="load, every 15s" hx-swap="innerHTML">
+      {% include "hub/_lm_status.html" %}
+    </div>
+  </aside>
+</div>
+{% endblock %}

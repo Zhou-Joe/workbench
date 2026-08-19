@@ -1,0 +1,5 @@
+{% if lm_ok %}
+<p class="lm-status ok"><span class="dot"></span> Connected — {{ lm_detail }}{% if lm_model %} · model {{ lm_model }}{% endif %}</p>
+{% else %}
+<p class="lm-status down"><span class="dot"></span> LM Studio {{ lm_detail }}. Milestone extraction pauses until it is running; file ingestion continues.</p>
+{% endif %}
