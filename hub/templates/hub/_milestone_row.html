@@ -5,6 +5,7 @@
     <div class="ms-title">{{ m.title }}</div>
     {% if m.evidence and m.status == "extracted" %}<div class="ms-evidence">“{{ m.evidence }}</div>{% endif %}
     {% if m.notes %}<div class="ms-notes">{{ m.notes }}</div>{% endif %}
+    {% if m.depends_on.all|length %}<div class="ms-deps num">{% for d in m.depends_on.all %}<span class="depchip {% if d.status != 'confirmed' and d.status != 'edited' %}depchip-open{% endif %}">← {{ d.title|truncatechars:34 }}</span>{% endfor %}</div>{% endif %}
     {% if m.status == "extracted" %}
     <details class="ms-edit">
       <summary>Edit</summary>
@@ -15,6 +16,15 @@
           <select name="mtype">{% for value, label in m.MType.choices %}<option value="{{ value }}" {% if m.mtype == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
         </label>
         <label>Notes <input type="text" name="notes" value="{{ m.notes }}"></label>
+        {% if dep_candidates %}
+        <label>Depends on
+          <select name="depends_on" multiple size="4">
+            {% for d in dep_candidates %}
+            <option value="{{ d.pk }}" {% if d in m.depends_on.all %}selected{% endif %}>{{ d.date|date:"m-d" }} {{ d.title|truncatechars:40 }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        {% endif %}
         <button type="submit">Save</button>
       </form>
     </details>

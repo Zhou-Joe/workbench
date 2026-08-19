@@ -16,7 +16,16 @@ def _queue_digest(milestone):
 def _row(request, milestone):
     """Row actions swap nothing (bare <tr> fragments don't parse reliably in
     htmx); the HX-Trigger header makes the enclosing region refresh instead."""
-    response = render(request, "hub/_milestone_row.html", {"m": milestone})
+    response = render(
+        request,
+        "hub/_milestone_row.html",
+        {
+            "m": milestone,
+            "dep_candidates": milestone.project.milestones.exclude(
+                pk=milestone.pk
+            ).exclude(status="dismissed").order_by("-date", "-pk")[:30],
+        },
+    )
     response["HX-Trigger"] = "rph:tick"
     return response
 
@@ -48,5 +57,15 @@ def milestone_edit(request, ms_id):
     milestone.notes = request.POST.get("notes", "").strip()
     milestone.status = Milestone.Status.EDITED
     milestone.save()
+    if "depends_on" in request.POST:
+        pks = [
+            int(v)
+            for v in request.POST.getlist("depends_on")
+            if v.isdigit()
+        ]
+        allowed = milestone.project.milestones.filter(pk__in=pks).exclude(
+            pk=milestone.pk
+        )
+        milestone.depends_on.set(allowed)
     _queue_digest(milestone)
     return _row(request, milestone)

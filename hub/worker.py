@@ -53,6 +53,7 @@ class Worker:
             ExtractionJob.Kind.DELTA: self.process_delta,
             ExtractionJob.Kind.REPORT: self.process_report,
             ExtractionJob.Kind.ASK: self.process_ask,
+            ExtractionJob.Kind.CAPTURE: self.process_capture,
         }[job.kind]
         try:
             handler(job)
@@ -243,6 +244,50 @@ class Worker:
         question.answered_at = timezone.now()
         question.save()
         bus.publish("ask", question_id=question.pk)
+
+    def process_capture(self, job):
+        """Ask the LLM where a quick-captured note should be filed."""
+        from .models import Capture, Phase, Project
+
+        settings = AppSettings.load()
+        capture = job.capture
+        projects_info = [
+            (p.slug, p.name, ph.order, ph.name, ph.extraction_focus)
+            for p in Project.objects.prefetch_related("phases")
+            for ph in p.phases.all()
+        ]
+        content = llm.chat(
+            settings,
+            [
+                {"role": "system", "content": prompts.SYSTEM_CAPTURE},
+                {
+                    "role": "user",
+                    "content": prompts.build_capture_prompt(
+                        capture.text, projects_info
+                    ),
+                },
+            ],
+        )
+        data = llm.extract_json(content)
+        slug = data.get("project_slug")
+        project = Project.objects.filter(slug=slug).first() if slug else None
+        phase = None
+        if project:
+            try:
+                phase = Phase.objects.get(
+                    project=project, order=int(data.get("phase_order", 0))
+                )
+            except (Phase.DoesNotExist, TypeError, ValueError):
+                phase = None
+        capture.suggested_project = project
+        capture.suggested_phase = phase
+        try:
+            capture.rationale = str(data.get("rationale", ""))[:400]
+        except Exception:
+            capture.rationale = ""
+        capture.save()
+        _assign_tags(capture, data.get("tags"))
+        bus.publish("capture", capture_id=capture.pk)
 
     def process_report(self, job):
         from datetime import timedelta

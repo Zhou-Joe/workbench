@@ -166,6 +166,86 @@ mark { background: #ffe3d6; color: inherit; padding: 0 0.1em; }
 .similar-list { list-style: none; display: grid; gap: 0.35rem; font-size: 0.85rem; }
 .similar-list li { display: flex; gap: 0.8rem; flex-wrap: wrap; align-items: baseline; }
 
+/* ---------- quick capture ---------- */
+
+.masthead-capture input {
+  width: 11rem;
+  border: var(--hairline);
+  background: var(--neutral);
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
+}
+.masthead-capture input:focus { background: var(--paper); }
+
+.capture-list { display: grid; gap: 0.9rem; max-width: 50rem; }
+.capture-card { border: var(--hairline-soft); padding: 0.8rem 1rem; display: grid; gap: 0.4rem; }
+.capture-text { font-size: 0.92rem; }
+.capture-suggest { font-size: 0.8rem; }
+.capture-actions { display: flex; gap: 0.6rem; align-items: flex-end; }
+.capture-actions select { width: auto; min-width: 14rem; }
+.filed-captures { margin-top: 1.4rem; max-width: 50rem; }
+.filed-list { list-style: none; margin-top: 0.5rem; font-size: 0.8rem; }
+
+/* ---------- gantt timeline ---------- */
+
+.gantt { border: var(--hairline); background: var(--paper); max-width: 100%; }
+.gaxis { stroke: #d9d9db; stroke-width: 1; }
+.gaxis-label { font-size: 10px; fill: var(--ink-soft); font-family: var(--sans); }
+.glabel { font-size: 11px; fill: var(--ink); font-family: var(--sans); }
+.glabel-blocked { fill: var(--accent); font-weight: 700; }
+.gdot { stroke: var(--ink); stroke-width: 1; }
+.gdot-gate { fill: var(--ink); }
+.gdot-decision { fill: #fff; }
+.gdot-deliverable { fill: #8a8a8e; }
+.gdot-issue, .gdot-risk, .gdot-action { fill: var(--accent); }
+.gdot-blocked { fill: var(--paper); stroke: var(--accent); stroke-width: 3; }
+.garrow { fill: none; stroke: var(--ink); stroke-width: 1.2; }
+.gantt-legend { display: flex; gap: 1rem; align-items: center; font-size: 0.75rem; color: var(--ink-soft); margin-top: 0.6rem; }
+.gantt-legend .gdot { display: inline-block; width: 10px; height: 10px; border-radius: 0; }
+
+.depchip {
+  display: inline-block;
+  font-size: 0.7rem;
+  border: var(--hairline-soft);
+  padding: 0 0.3rem;
+  margin-right: 0.3rem;
+  color: var(--ink-soft);
+}
+.depchip-open { border-color: var(--accent); color: var(--accent); }
+
+/* ---------- command palette ---------- */
+
+.palette-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 17, 17, 0.35);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 12vh;
+  z-index: 50;
+}
+.palette-box {
+  width: min(34rem, 92vw);
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  box-shadow: 8px 8px 0 rgba(17, 17, 17, 0.2);
+}
+.palette-box input {
+  border: none;
+  border-bottom: var(--hairline);
+  padding: 0.8rem 1rem;
+  font-size: 1rem;
+}
+.palette-list { list-style: none; max-height: 18rem; overflow: auto; }
+.palette-list li {
+  padding: 0.45rem 1rem;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+.palette-list li.palette-active { background: var(--accent); color: #fff; }
+.palette-hint { padding: 0.4rem 1rem 0.6rem; font-size: 0.72rem; color: var(--ink-soft); }
+
 /* ---------- decisions & report ---------- */
 
 .decisions-table .ms-evidence { font-size: 0.8rem; color: var(--ink-soft); max-width: 26rem; }

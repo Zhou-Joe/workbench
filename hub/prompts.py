@@ -4,6 +4,27 @@ import json
 
 MAX_TEXT_CHARS = 24_000
 
+SYSTEM_CAPTURE = """\
+You route a quick note from a ride development engineer into their project \
+workspace. Given the note and the list of projects with their phases (each \
+phase has an extraction focus describing its purpose), decide where it \
+belongs. Return ONLY a JSON object:
+{"project_slug": "slug or null if nothing matches",
+ "phase_order": 3,
+ "confidence": 0.0,
+ "tags": ["up to 3 short tags"],
+ "rationale": "one short sentence"}
+Rules: only use slugs and phase orders from the list. If the note clearly \
+does not belong to any project, return null for project_slug."""
+
+
+def build_capture_prompt(text, projects_info):
+    parts = ["NOTE:", text, "", "AVAILABLE DESTINATIONS:"]
+    for slug, name, order, phase_name, focus in projects_info:
+        parts.append(f"- {slug} / phase {order:02d} {phase_name}" + (f" — {focus}" if focus else ""))
+    return "\n".join(parts)
+
+
 ASK_EXCERPT_CHARS = 4_000
 ASK_MAX_SOURCES = 6
 

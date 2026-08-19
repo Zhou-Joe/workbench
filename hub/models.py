@@ -208,8 +208,18 @@ class Milestone(models.Model):
     confidence = models.FloatField(default=0.0)
     evidence = models.TextField(blank=True)
     notes = models.TextField(blank=True)
+    depends_on = models.ManyToManyField(
+        "self", symmetrical=False, blank=True, related_name="blocks"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    updated_at = models.DateTimeField(auto_now_add=True)
+
+    @property
+    def is_blocked(self):
+        """A milestone is blocked while any dependency is not yet confirmed."""
+        return self.depends_on.exclude(
+            status__in=["confirmed", "edited"]
+        ).exists()
 
     class Meta:
         ordering = ["date", "pk"]
@@ -228,6 +238,34 @@ class PhaseDigest(models.Model):
 
     def __str__(self):
         return f"digest: {self.phase}"
+
+
+class Capture(models.Model):
+    """Quick note dumped from anywhere — the LLM suggests where to file it."""
+
+    class Status(models.TextChoices):
+        INBOX = "inbox"
+        FILED = "filed"
+        SKIPPED = "skipped"
+
+    text = models.TextField()
+    status = models.CharField(max_length=8, choices=Status, default=Status.INBOX)
+    suggested_project = models.ForeignKey(
+        Project, on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
+    )
+    suggested_phase = models.ForeignKey(
+        Phase, on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
+    )
+    rationale = models.CharField(max_length=400, blank=True)
+    filed_path = models.CharField(max_length=1024, blank=True)
+    tags = models.ManyToManyField(Tag, blank=True, related_name="captures")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return self.text[:60]
 
 
 class Question(models.Model):
@@ -274,6 +312,7 @@ class ExtractionJob(models.Model):
         DELTA = "delta"
         REPORT = "report"
         ASK = "ask"
+        CAPTURE = "capture"
 
     class Status(models.TextChoices):
         QUEUED = "queued"
@@ -303,6 +342,13 @@ class ExtractionJob(models.Model):
     )
     question = models.ForeignKey(
         Question,
+        on_delete=models.CASCADE,
+        related_name="jobs",
+        null=True,
+        blank=True,
+    )
+    capture = models.ForeignKey(
+        Capture,
         on_delete=models.CASCADE,
         related_name="jobs",
         null=True,

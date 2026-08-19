@@ -1,0 +1,53 @@
+{% extends "hub/base.html" %}
+{% block title %}Timeline — {{ project.name }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="crumb"><a href="{% url 'hub:home' %}">Portfolio</a> /
+      <a href="{% url 'hub:project' project.slug %}">{{ project.name }}</a> / Timeline</p>
+    <h1>Dependency timeline</h1>
+    <p class="hint">
+      {% if blocked_count %}{{ blocked_count }} milestone{{ blocked_count|pluralize }} blocked by unconfirmed dependencies (orange).{% else %}No blocked milestones.{% endif %}
+      Edit dependencies on any milestone in the ledger.
+    </p>
+  </div>
+  <div class="page-head-actions">
+    <a class="button" href="{% url 'hub:project_calendar' project.slug %}">Export calendar (.ics)</a>
+  </div>
+</div>
+
+{% if rows %}
+<svg class="gantt" viewBox="0 0 {{ chart_width }} {{ chart_height }}" width="100%" role="img" aria-label="milestone timeline">
+  <defs>
+    <marker id="arrowhead" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="#111"/>
+    </marker>
+  </defs>
+  {% for a in axis %}
+  <line x1="{{ a.x }}" y1="16" x2="{{ a.x }}" y2="{{ chart_height }}" class="gaxis"/>
+  <text x="{{ a.x }}" y="12" text-anchor="middle" class="gaxis-label">{{ a.label }}</text>
+  {% endfor %}
+  {% for r in rows %}
+  <text x="8" y="{{ r.y|add:4 }}" class="glabel {% if r.blocked %}glabel-blocked{% endif %}">
+    {{ r.m.title|truncatechars:40 }}{% if r.m.date %} · {{ r.m.date|date:"Y-m-d" }}{% endif %}{% if r.blocked %} ⛔{% endif %}
+  </text>
+  {% if r.x %}
+  <circle cx="{{ r.x }}" cy="{{ r.y }}" r="7" class="gdot gdot-{{ r.m.mtype }} {% if r.blocked %}gdot-blocked{% endif %}"/>
+  {% endif %}
+  {% endfor %}
+  {% for a in arrows %}
+  <path d="M {{ a.x1 }} {{ a.y1 }} C {{ a.x1 }} {{ a.y1|add:"20" }}, {{ a.x2 }} {{ a.y2|add:"-20" }}, {{ a.x2 }} {{ a.y2 }}" class="garrow" marker-end="url(#arrowhead)"/>
+  {% endfor %}
+</svg>
+
+<div class="gantt-legend">
+  <span class="gdot gdot-gate"></span> gate
+  <span class="gdot gdot-decision"></span> decision
+  <span class="gdot gdot-deliverable"></span> deliverable
+  <span class="gdot gdot-issue"></span> issue/risk/action
+  <span class="gdot gdot-blocked"></span> blocked
+</div>
+{% else %}
+<p class="empty">No dated milestones yet — they appear once documents are extracted and confirmed.</p>
+{% endif %}
+{% endblock %}

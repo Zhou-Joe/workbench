@@ -11,6 +11,7 @@
     </p>
   </div>
   <div class="page-head-actions">
+    <a class="button" href="{% url 'hub:project_timeline' project.slug %}">Timeline</a>
     <a class="button" href="{% url 'hub:project_decisions' project.slug %}">Decision log</a>
     <a class="button" href="{% url 'hub:project_report' project.slug %}">Weekly report</a>
     <button hx-post="{% url 'hub:project_rescan' project.slug %}"

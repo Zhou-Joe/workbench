@@ -14,11 +14,17 @@
   <div class="masthead-inner">
     <a class="wordmark" href="{% url 'hub:home' %}">RIDE&nbsp;PROGRAM&nbsp;HUB<span class="wordmark-rule"></span></a>
     <span id="activity" class="activity" aria-live="polite"></span>
+    <form class="masthead-capture"
+          hx-post="{% url 'hub:capture' %}" hx-swap="none"
+          hx-on::after-request="if(event.detail.successful){this.reset();this.querySelector('input').placeholder='Captured ✓';setTimeout(()=>this.querySelector('input').placeholder='Capture a thought…',2000)}">
+      <input type="text" name="q" placeholder="Capture a thought…" aria-label="Quick capture">
+    </form>
     <form class="masthead-search" action="{% url 'hub:search' %}" method="get">
       <input type="search" name="q" placeholder="Search documents…" value="{{ request.GET.q }}" aria-label="Search documents">
     </form>
     <nav class="masthead-nav">
       <a href="{% url 'hub:home' %}">Portfolio</a>
+      <a href="{% url 'hub:inbox' %}">Inbox</a>
       <a href="{% url 'hub:ask' %}">Ask</a>
       <a href="{% url 'hub:jobs' %}">Jobs</a>
       <a href="{% url 'hub:settings' %}">Settings</a>
@@ -34,5 +40,12 @@
 <main class="page">
 {% block content %}{% endblock %}
 </main>
+<div class="palette-overlay" id="palette" hidden>
+  <div class="palette-box">
+    <input type="text" id="palette-input" placeholder="Jump to… (projects, phases, actions)" autocomplete="off">
+    <ul id="palette-list" class="palette-list"></ul>
+    <p class="palette-hint">↑↓ navigate · Enter open · Esc close · ⌘K toggle</p>
+  </div>
+</div>
 </body>
 </html>

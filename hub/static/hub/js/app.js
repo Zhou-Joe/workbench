@@ -132,6 +132,104 @@
     document.querySelectorAll("[data-dropzone]").forEach(wireDropzone);
   });
 
+  // ---------- ⌘K command palette ----------
+
+  var paletteItems = null;
+
+  function paletteToggle(show) {
+    var overlay = document.getElementById("palette");
+    var input = document.getElementById("palette-input");
+    if (!overlay || !input) return;
+    if (show === undefined) show = overlay.hidden;
+    overlay.hidden = !show;
+    if (show) {
+      input.value = "";
+      paletteRender("");
+      input.focus();
+    }
+  }
+
+  function paletteRender(query) {
+    if (paletteItems === null) return;
+    var q = query.trim().toLowerCase();
+    var list = document.getElementById("palette-list");
+    list.innerHTML = "";
+    var matches = paletteItems
+      .filter(function (item) {
+        return !q || item.label.toLowerCase().indexOf(q) >= 0;
+      })
+      .slice(0, 12);
+    matches.forEach(function (item, i) {
+      var li = document.createElement("li");
+      li.textContent = item.label;
+      li.dataset.url = item.url;
+      li.className = i === 0 ? "palette-active" : "";
+      li.addEventListener("click", function () {
+        window.location.href = item.url;
+      });
+      list.appendChild(li);
+    });
+  }
+
+  function paletteMove(delta) {
+    var list = document.getElementById("palette-list");
+    var items = Array.prototype.slice.call(list.children);
+    if (!items.length) return;
+    var idx = items.findIndex(function (li) {
+      return li.classList.contains("palette-active");
+    });
+    items[idx] && items[idx].classList.remove("palette-active");
+    var next = Math.min(Math.max(idx + delta, 0), items.length - 1);
+    items[next].classList.add("palette-active");
+    items[next].scrollIntoView({ block: "nearest" });
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    fetch("/palette/")
+      .then(function (r) {
+        return r.json();
+      })
+      .then(function (data) {
+        paletteItems = data.items || [];
+      })
+      .catch(function () {});
+  });
+
+  document.addEventListener("keydown", function (e) {
+    if ((e.metaKey || e.ctrlKey) && (e.key === "k" || e.key === "K")) {
+      e.preventDefault();
+      paletteToggle();
+      return;
+    }
+    var overlay = document.getElementById("palette");
+    if (!overlay || overlay.hidden) return;
+    if (e.key === "Escape") {
+      paletteToggle(false);
+    } else if (e.key === "ArrowDown") {
+      e.preventDefault();
+      paletteMove(1);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      paletteMove(-1);
+    } else if (e.key === "Enter") {
+      var active = document.querySelector("#palette-list .palette-active");
+      if (active) window.location.href = active.dataset.url;
+    }
+  });
+
+  document.addEventListener("input", function (e) {
+    if (e.target && e.target.id === "palette-input") {
+      paletteRender(e.target.value);
+    }
+  });
+
+  document.addEventListener("click", function (e) {
+    var overlay = document.getElementById("palette");
+    if (overlay && !overlay.hidden && e.target === overlay) {
+      paletteToggle(false);
+    }
+  });
+
   // phase-body regions are replaced by htmx swaps — re-wire their drop zones
   document.body.addEventListener("htmx:afterSwap", function (e) {
     if (e.target && e.target.querySelectorAll) {

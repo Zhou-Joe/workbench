@@ -1,0 +1,63 @@
+<div id="inbox-area"
+     hx-get="{% url 'hub:inbox' %}"
+     hx-select="#inbox-area"
+     hx-swap="outerHTML"
+     hx-trigger="rph:tick from:body, every 30s">
+  {% if inbox %}
+  <div class="capture-list">
+    {% for c in inbox %}
+    <div class="capture-card" id="capture-{{ c.pk }}">
+      <p class="capture-text">{{ c.text }}</p>
+      <p class="capture-meta dim num">{{ c.created_at|date:"Y-m-d H:i" }}
+        {% for t in c.tags.all %}<span class="tagchip">{{ t.name }}</span>{% endfor %}
+      </p>
+      {% if c.suggested_phase %}
+      <p class="capture-suggest">Suggested:
+        <strong>{{ c.suggested_project.name }} → {{ c.suggested_phase.order|stringformat:"02d" }} {{ c.suggested_phase.name }}</strong>
+        {% if c.rationale %}<span class="dim"> — {{ c.rationale }}</span>{% endif %}
+      </p>
+      <form class="capture-actions"
+            hx-post="{% url 'hub:capture_file' c.pk %}"
+            hx-target="#inbox-area" hx-select="#inbox-area" hx-swap="outerHTML">
+        <input type="hidden" name="phase_id" value="{{ c.suggested_phase.pk }}">
+        <button type="submit" class="primary">File it</button>
+      </form>
+      {% else %}
+      <p class="capture-suggest dim">{% if c.jobs.all %}thinking where this belongs…{% else %}no suggestion — pick a destination{% endif %}</p>
+      {% endif %}
+      <form class="capture-actions"
+            hx-post="{% url 'hub:capture_file' c.pk %}"
+            hx-target="#inbox-area" hx-select="#inbox-area" hx-swap="outerHTML">
+        <select name="phase_id">
+          <option value="">file elsewhere…</option>
+          {% for ph in all_phases %}
+          <option value="{{ ph.pk }}">{{ ph.project.name }} / {{ ph.order|stringformat:"02d" }} {{ ph.name }}</option>
+          {% endfor %}
+        </select>
+        <button type="submit">File</button>
+      </form>
+      <form class="capture-actions"
+            hx-post="{% url 'hub:capture_skip' c.pk %}"
+            hx-target="#inbox-area" hx-select="#inbox-area" hx-swap="outerHTML">
+        <button type="submit">Skip</button>
+      </form>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="empty">Inbox is empty. Use the capture box in the header any time something crosses your mind — decide where it goes later.</p>
+  {% endif %}
+
+  {% if filed %}
+  <details class="filed-captures">
+    <summary>Recently filed ({{ filed|length }})</summary>
+    <ul class="filed-list">
+      {% for c in filed %}
+      <li class="dim num">{{ c.created_at|date:"m-d H:i" }} →
+        {% if c.suggested_phase %}{{ c.suggested_project.name }} / {{ c.suggested_phase.order|stringformat:"02d" }} {{ c.suggested_phase.name }}{% endif %}
+        — {{ c.text|truncatechars:60 }}</li>
+      {% endfor %}
+    </ul>
+  </details>
+  {% endif %}
+</div>

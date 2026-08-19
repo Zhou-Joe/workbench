@@ -19,9 +19,12 @@ from .docs import (
     undo_archive,
 )
 from .ask import ask, ask_clear, ask_folder
+from .capture import capture, capture_file, capture_skip, inbox
 from .download import download_file, download_folder, download_zip
 from .jobs import job_retry, jobs
+from .palette import palette
 from .preview import preview
+from .timeline import project_calendar, project_timeline
 from .milestones import milestone_action, milestone_edit
 from .settings_view import lm_status, settings_view
 from .sse import sse
@@ -54,6 +57,13 @@ __all__ = [
     "ask",
     "ask_clear",
     "ask_folder",
+    "capture",
+    "capture_file",
+    "capture_skip",
+    "inbox",
+    "palette",
+    "project_calendar",
+    "project_timeline",
     "jobs",
     "job_retry",
     "settings_view",

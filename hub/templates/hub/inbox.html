@@ -1,0 +1,12 @@
+{% extends "hub/base.html" %}
+{% block title %}Inbox — Ride Program Hub{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="crumb"><a href="{% url 'hub:home' %}">Portfolio</a> / Inbox</p>
+    <h1>Capture inbox</h1>
+    <p class="hint">Filing a capture writes it into the project's phase folder as a markdown note — it then flows through the normal extraction pipeline.</p>
+  </div>
+</div>
+{% include "hub/_inbox_area.html" %}
+{% endblock %}

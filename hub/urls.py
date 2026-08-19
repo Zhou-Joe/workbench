@@ -16,6 +16,21 @@ urlpatterns = [
     ),
     path("project/<slug>/report/", views.project_report, name="project_report"),
     path("search/", views.search, name="search"),
+    path("inbox/", views.inbox, name="inbox"),
+    path("capture/", views.capture, name="capture"),
+    path("capture/<int:capture_id>/file/", views.capture_file, name="capture_file"),
+    path("capture/<int:capture_id>/skip/", views.capture_skip, name="capture_skip"),
+    path("palette/", views.palette, name="palette"),
+    path(
+        "project/<slug>/calendar.ics",
+        views.project_calendar,
+        name="project_calendar",
+    ),
+    path(
+        "project/<slug>/timeline/",
+        views.project_timeline,
+        name="project_timeline",
+    ),
     path("ask/", views.ask, name="ask"),
     path("ask/clear/", views.ask_clear, name="ask_clear"),
     path(

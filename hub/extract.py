@@ -34,11 +34,23 @@ def kind_for_extension(ext):
     return "other"
 
 
+TEXT_EXTENSIONS = {".txt", ".md"}
+
+
 def extract(path_str, mineru_path="mineru", mineru_timeout=900):
     """Route a file to its tier. Returns (text, tier, quality_note)."""
     path = Path(path_str)
     ext = path.suffix.lower()
 
+    if ext in TEXT_EXTENSIONS:
+        try:
+            return (
+                path.read_text(encoding="utf-8", errors="replace"),
+                "native",
+                "",
+            )
+        except OSError:
+            return _metadata_block(path), "metadata", "unreadable text file"
     if ext in OFFICE_EXTENSIONS:
         text = _extract_office(path, ext)
         if text is not None:
