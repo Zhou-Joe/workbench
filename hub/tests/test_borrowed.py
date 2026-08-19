@@ -92,7 +92,7 @@ class AgentAskTests(WorkspaceTestCase):
         self.client.post(reverse("hub:ask"), {"q": "What about the weld inspection?"})
         question = Question.objects.first()
 
-        def fake_agent(text, project=None):
+        def fake_agent(text, project=None, folder_path=""):
             assert "weld inspection" in text
             return (
                 "The inspection moves to September [vendor-email.txt].",
@@ -106,6 +106,68 @@ class AgentAskTests(WorkspaceTestCase):
         self.assertIn("September", question.answer)
         self.assertEqual(len(question.citations), 1)
         self.assertEqual(question.citations[0]["filename"], "vendor-email.txt")
+
+
+class FolderAskTests(WorkspaceTestCase):
+    def test_ask_folder_creates_scoped_question(self):
+        project = self.seed_project()
+        resp = self.client.post(
+            reverse("hub:ask_folder", args=[project.slug, 2]),
+            {"q": "What is open here?", "path": "01-incoming"},
+            headers={"HX-Request": "true"},
+        )
+        self.assertEqual(resp.status_code, 200)
+        question = Question.objects.first()
+        self.assertEqual(
+            question.folder_path,
+            f"{project.slug}/02-phase-2/01-incoming",
+        )
+        self.assertEqual(question.project, project)
+        self.assertTrue(
+            ExtractionJob.objects.filter(question=question, kind="ask").exists()
+        )
+        # folder view shows the panel and the question
+        resp = self.client.get(
+            reverse("hub:phase", args=[project.slug, 2]), {"path": "01-incoming"}
+        )
+        self.assertContains(resp, "Ask about this folder")
+        self.assertContains(resp, "What is open here?")
+
+    def test_folder_scoped_tools_stay_in_scope(self):
+        from hub.agent import _build_tools
+        from hub.models import AppSettings
+
+        project = self.seed_project()
+        phase = project.phases.get(order=1)
+        Document.objects.create(
+            phase=phase,
+            file_path=f"{project.slug}/01-phase-1/01-incoming/inside.txt",
+            filename="inside.txt", extension=".txt", doc_kind="other",
+            extraction_status="done", extracted_text="weld inspection notes inside",
+        )
+        Document.objects.create(
+            phase=phase,
+            file_path=f"{project.slug}/01-phase-1/outside.txt",
+            filename="outside.txt", extension=".txt", doc_kind="other",
+            extraction_status="done", extracted_text="weld inspection notes outside",
+        )
+        settings = AppSettings.load()
+        read = []
+
+        def remember(doc):
+            read.append(doc)
+
+        tools = _build_tools(
+            settings, None, remember, f"{project.slug}/01-phase-1/01-incoming"
+        )
+        by_name = {t.__name__: t for t in tools}
+        out = by_name["read_document"](f"{project.slug}/01-phase-1/outside.txt")
+        self.assertIn("outside the question's folder scope", out)
+        results = by_name["search_documents"]("weld inspection")
+        self.assertIn("inside.txt", results)
+        self.assertNotIn("outside.txt", results)
+        scope_desc = by_name["list_projects_and_phases"]()
+        self.assertIn("SCOPE: folder", scope_desc)
 
 
 class JobsDashboardTests(WorkspaceTestCase):

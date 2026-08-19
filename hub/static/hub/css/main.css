@@ -138,6 +138,11 @@ mark { background: #ffe3d6; color: inherit; padding: 0 0.1em; }
 
 /* ---------- ask ---------- */
 
+.ask-folder { border: var(--hairline); padding: 1rem 1.2rem 1.1rem; }
+.ask-folder form { margin-bottom: 0.4rem; }
+.ask-folder-row { display: flex; gap: 0.8rem; }
+.ask-folder-row input[type="text"] { flex: 1; }
+.ask-folder .ask-list { margin-top: 0.6rem; }
 .ask-form { display: flex; gap: 0.8rem; margin-bottom: 1.4rem; }
 .ask-form input[type="text"] { flex: 1; font-size: 1rem; }
 .ask-form select { width: auto; min-width: 10rem; }

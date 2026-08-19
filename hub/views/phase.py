@@ -230,11 +230,23 @@ def phase_detail(request, project_slug, order):
     if cur_dir is not None:
         phase_tree = _build_tree(phase, settings, current)
 
+    # folder-scoped ask panel
+    folder_questions = []
+    if phase_dir_path:
+        from .models import Question
+
+        prefix = f"{project.slug}/{phase.folder_name}"
+        folder_path_ws = f"{prefix}/{current}" if current else prefix
+        folder_questions = Question.objects.filter(
+            project=project, folder_path=folder_path_ws
+        )[:3]
+
     context = {
         "project": project,
         "phase": phase,
         "phases": phases,
         "phase_tree": phase_tree,
+        "folder_questions": folder_questions,
         "current": current,
         "crumbs": crumbs,
         "folders": folders,

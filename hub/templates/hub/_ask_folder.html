@@ -1,0 +1,41 @@
+<div class="ask-folder" id="ask-folder">
+  <div class="section-head">
+    <h2>Ask about this folder</h2>
+    <span class="hint">the agent only reads files under <code>{{ current|default:phase.folder_name }}</code></span>
+  </div>
+  <form hx-post="{% url 'hub:ask_folder' project.slug phase.order %}"
+        hx-target="#ask-folder" hx-swap="outerHTML"
+        hx-on::after-request="if(event.detail.successful) this.reset()">
+    <input type="hidden" name="path" value="{{ current }}">
+    <div class="ask-folder-row">
+      <input type="text" name="q" required
+             placeholder="e.g. What is still open in these files?">
+      <button type="submit" class="primary">Ask</button>
+    </div>
+  </form>
+  {% if folder_questions %}
+  <div class="ask-list">
+    {% for question in folder_questions %}
+    <article class="ask-item status-{{ question.status }}">
+      <h3 class="ask-q">{{ question.question }}</h3>
+      {% if question.status == "queued" or question.status == "running" %}
+      <p class="hint">agent is browsing this folder…</p>
+      {% elif question.status == "failed" %}
+      <p class="form-error">{{ question.error }}</p>
+      {% else %}
+      <div class="ask-answer">{{ question.answer|linebreaks }}</div>
+      {% if question.citations %}
+      <ol class="ask-cites">
+        {% for c in question.citations %}
+        <li>
+          <a class="doc-open" href="{% url 'hub:preview' %}?path={{ c.path|urlencode }}" target="_blank">{{ c.filename }}</a>
+        </li>
+        {% endfor %}
+      </ol>
+      {% endif %}
+      {% endif %}
+    </article>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>

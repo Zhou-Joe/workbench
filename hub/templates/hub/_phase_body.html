@@ -149,6 +149,10 @@
     {% endif %}
   </section>
 
+  {% if phase_dir_path %}
+  {% include "hub/_ask_folder.html" with project=project phase=phase current=current folder_questions=folder_questions %}
+  {% endif %}
+
   {% if not current %}
   {% if unassigned %}
   <section class="panel panel-warn">

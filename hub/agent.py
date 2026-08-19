@@ -17,8 +17,9 @@ READ_CHARS = 6_000
 LIST_LIMIT = 60
 
 
-def run_agent_question(question_text, project=None):
-    """Returns (answer_text, [Document, ...] actually read/searched)."""
+def run_agent_question(question_text, project=None, folder_path=""):
+    """Returns (answer_text, [Document, ...] actually read/searched).
+    folder_path scopes every tool to one workspace folder subtree."""
     from langchain.agents import create_agent
     from langchain.chat_models import init_chat_model
 
@@ -41,8 +42,8 @@ def run_agent_question(question_text, project=None):
     )
     agent = create_agent(
         model,
-        tools=_build_tools(settings, project, remember),
-        system_prompt=_system_prompt(project),
+        tools=_build_tools(settings, project, remember, folder_path),
+        system_prompt=_system_prompt(project, folder_path),
     )
     result = agent.invoke({"messages": [("user", question_text)]})
     answer = result["messages"][-1].content
@@ -51,8 +52,13 @@ def run_agent_question(question_text, project=None):
     return answer, list(collector.values())
 
 
-def _system_prompt(project):
-    scope = f"the project '{project.name}'" if project else "all projects"
+def _system_prompt(project, folder_path=""):
+    if folder_path:
+        scope = f"the folder '{folder_path}' (and its sub-folders)"
+    elif project:
+        scope = f"the project '{project.name}'"
+    else:
+        scope = "all projects"
     return (
         "You are a document agent for a ride development engineer. Answer the "
         f"engineer's question using ONLY information from {scope}, retrieved "
@@ -65,18 +71,45 @@ def _system_prompt(project):
     )
 
 
-def _build_tools(settings, project, remember):
+def _build_tools(settings, project, remember, folder_path=""):
     """Plain functions with type hints + docstrings — create_agent accepts
-    these directly as tools. Each returns a string for the model."""
+    these directly as tools. Each returns a string for the model.
+    folder_path (workspace-relative) scopes listing/reading/searching to one
+    folder subtree."""
 
-    scope_projects = (
-        Project.objects.filter(pk=project.pk) if project else Project.objects.all()
-    )
+    from pathlib import Path
+
+    try:
+        ws_root = Path(settings.expanded_workspace_root()).resolve()
+    except (RuntimeError, AttributeError):
+        ws_root = None
+
+    scope_dir = None
+    if folder_path and ws_root is not None:
+        candidate = (ws_root / folder_path).resolve()
+        if str(candidate).startswith(str(ws_root)) and candidate.is_dir():
+            scope_dir = candidate
+
+    def _in_scope(rel_path):
+        if scope_dir is None:
+            return True
+        return rel_path == folder_path or rel_path.startswith(folder_path + "/")
 
     def list_projects_and_phases() -> str:
-        """List every available project with its phases and document counts.
-        Call this first when you don't know where to look."""
+        """Describe the current scope: the project(s)/phases/folder the
+        question is about. Call this first when you don't know where to look."""
+        if scope_dir is not None:
+            docs = Document.objects.filter(
+                file_path__startswith=folder_path + "/"
+            ).count()
+            return (
+                f"SCOPE: folder {folder_path} — {docs} indexed document(s) in "
+                "this folder tree. Use list_folder(path='') to browse it."
+            )
         lines = []
+        scope_projects = (
+            Project.objects.filter(pk=project.pk) if project else Project.objects.all()
+        )
         for p in scope_projects.prefetch_related("phases"):
             lines.append(f"PROJECT {p.slug} — {p.name}")
             for ph in p.phases.all():
@@ -84,31 +117,38 @@ def _build_tools(settings, project, remember):
                 lines.append(f"  phase {ph.order:02d} {ph.slug} — {n} docs")
         return "\n".join(lines) or "(no projects)"
 
-    def list_folder(project_slug: str, phase_order: int, path: str = "") -> str:
-        """List folders and files inside one phase folder (or a sub-folder of
-        it). path is the sub-folder relative to the phase root, e.g.
-        '01-incoming/vendor-a'. Returns file paths usable with read_document."""
+    def list_folder(project_slug: str = "", phase_order: int = 0, path: str = "") -> str:
+        """List folders and files. Returns workspace-relative paths usable
+        with read_document. When the question is folder-scoped, pass path as
+        the sub-folder inside that scope (project/phase args are ignored)."""
+        if scope_dir is not None:
+            base = scope_dir
+        else:
+            try:
+                phase = Phase.objects.get(
+                    project__slug=project_slug, order=phase_order
+                )
+            except Phase.DoesNotExist:
+                return (
+                    f"error: no phase {phase_order} in project '{project_slug}'"
+                )
+            if project and phase.project_id != project.pk:
+                return "error: phase is outside the allowed project"
+            try:
+                base = workspace.phase_dir(settings, phase.project, phase).resolve()
+            except (RuntimeError, OSError) as exc:
+                return f"error: {exc}"
         try:
-            phase = Phase.objects.get(
-                project__slug=project_slug, order=phase_order
-            )
-        except Phase.DoesNotExist:
-            return f"error: no phase {phase_order} in project '{project_slug}'"
-        if project and phase.project_id != project.pk:
-            return "error: phase is outside the allowed project"
-        try:
-            base = workspace.phase_dir(settings, phase.project, phase).resolve()
             cur = workspace.safe_subpath(base, path)
         except (RuntimeError, OSError) as exc:
             return f"error: {exc}"
         if not cur.is_dir():
             return "error: folder not found"
-        from pathlib import Path
-
-        ws_root = Path(settings.expanded_workspace_root()).resolve()
         lines = []
         for child in sorted(cur.iterdir(), key=lambda p: p.name.lower())[:LIST_LIMIT]:
             if child.name.startswith(".") or child.name == workspace.ARCHIVE_DIR:
+                continue
+            if ws_root is None:
                 continue
             rel = child.relative_to(ws_root).as_posix()
             if child.is_dir():
@@ -123,8 +163,11 @@ def _build_tools(settings, project, remember):
         """Read the extracted text of one document. path is the full
         workspace-relative path as shown by list_folder, e.g.
         'carousel/04-detail-design-and-review/01-incoming/report.pdf'."""
+        clean = path.strip()
+        if not _in_scope(clean):
+            return "error: document is outside the question's folder scope"
         doc = Document.objects.select_related("phase", "phase__project").filter(
-            file_path=path.strip()
+            file_path=clean
         ).first()
         if doc is None:
             return "error: document not found — use list_folder to get exact paths"
@@ -140,8 +183,8 @@ def _build_tools(settings, project, remember):
 
     def search_documents(query: str) -> str:
         """Full-text search across extracted documents (filenames and
-        content). Returns matching paths with context — then use
-        read_document on the best hits."""
+        content) within the question's scope. Returns matching paths with
+        context — then use read_document on the best hits."""
         q = query.strip()
         if len(q) < 2:
             return "error: query too short"
@@ -149,7 +192,9 @@ def _build_tools(settings, project, remember):
             Document.objects.filter(extracted_text__icontains=q)
             | Document.objects.filter(filename__icontains=q)
         ).select_related("phase", "phase__project").order_by("-ingested_at")
-        if project:
+        if scope_dir is not None:
+            docs = docs.filter(file_path__startswith=folder_path + "/")
+        elif project:
             docs = docs.filter(phase__project=project)
         lines = []
         for doc in docs[:8]:
@@ -166,12 +211,15 @@ def _build_tools(settings, project, remember):
 
     def get_milestones(project_slug: str = "", milestone_type: str = "") -> str:
         """Query the milestone ledger (dates, gates, decisions, issues,
-        risks, actions) with their source documents. milestone_type is one
-        of: gate, decision, deliverable, issue, risk, action."""
+        risks, actions) with their source documents, within the question's
+        scope. milestone_type is one of: gate, decision, deliverable, issue,
+        risk, action."""
         qs = Milestone.objects.exclude(status="dismissed").select_related(
             "phase", "phase__project", "document"
         )
-        if project:
+        if scope_dir is not None:
+            qs = qs.filter(document__file_path__startswith=folder_path + "/")
+        elif project:
             qs = qs.filter(project=project)
         elif project_slug:
             qs = qs.filter(project__slug=project_slug)

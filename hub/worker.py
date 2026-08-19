@@ -179,7 +179,9 @@ class Worker:
         try:
             from .agent import run_agent_question
 
-            answer, docs = run_agent_question(question.question, question.project)
+            answer, docs = run_agent_question(
+                question.question, question.project, question.folder_path
+            )
             question.answer = answer
             question.citations = [
                 {

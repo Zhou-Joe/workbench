@@ -21,6 +21,7 @@
     {% for question in questions %}
     <article class="ask-item status-{{ question.status }}">
       <h3 class="ask-q">{{ question.question }}</h3>
+      {% if question.folder_path %}<p class="hint num">scope: {{ question.folder_path }}</p>{% endif %}
       {% if question.status == "queued" or question.status == "running" %}
       <p class="hint">searching documents and thinking…</p>
       {% elif question.status == "failed" %}

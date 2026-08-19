@@ -18,6 +18,11 @@ urlpatterns = [
     path("search/", views.search, name="search"),
     path("ask/", views.ask, name="ask"),
     path("ask/clear/", views.ask_clear, name="ask_clear"),
+    path(
+        "project/<project_slug>/phase/<int:order>/ask/",
+        views.ask_folder,
+        name="ask_folder",
+    ),
     path("jobs/", views.jobs, name="jobs"),
     path("jobs/<int:job_id>/retry/", views.job_retry, name="job_retry"),
     path("project/<slug>/phases/add/", views.phase_add, name="phase_add"),

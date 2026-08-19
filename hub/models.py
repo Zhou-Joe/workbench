@@ -244,6 +244,11 @@ class Question(models.Model):
         null=True,
         blank=True,
     )
+    folder_path = models.CharField(
+        max_length=1024,
+        blank=True,
+        help_text="Workspace-relative folder the question was asked from",
+    )
     question = models.TextField()
     answer = models.TextField(blank=True)
     citations = models.JSONField(default=list, blank=True)
