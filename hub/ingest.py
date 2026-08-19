@@ -40,12 +40,15 @@ def scan_project(project, settings=None):
         for file_path in sorted(pdir.rglob("*")):
             if not file_path.is_file():
                 continue
+            # skip dotfiles/dot-dirs at any depth (.DS_Store, .tmp dirs…)
+            rel_in_phase = file_path.relative_to(pdir)
+            if any(part.startswith(".") for part in rel_in_phase.parts):
+                continue
             rel = file_path.relative_to(ws_root).as_posix()
+            # files anywhere under an _archive/ dir are superseded revisions
             if f"/{workspace.ARCHIVE_DIR}/" in f"/{rel}":
                 _ensure_archived_indexed(phase, file_path, rel, root, settings)
                 continue
-            if file_path.parent != pdir:
-                continue  # only phase-root files are "current deliverables"
             doc = _ingest_file(phase, file_path, rel, root, settings)
             if doc is None:
                 continue

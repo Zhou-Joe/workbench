@@ -150,6 +150,15 @@ class Document(models.Model):
         parts = self.file_path.split("/")
         return len(parts) >= 2 and parts[-2] == "_archive"
 
+    @property
+    def location(self):
+        """Sub-folder path inside the phase, e.g. 'structural/calcs' ('' at phase root)."""
+        prefix = f"{self.phase.project.slug}/{self.phase.folder_name}/"
+        if self.file_path.startswith(prefix):
+            rest = self.file_path[len(prefix):]
+            return rest.rpartition("/")[0]
+        return ""
+
 
 class Milestone(models.Model):
     class MType(models.TextChoices):

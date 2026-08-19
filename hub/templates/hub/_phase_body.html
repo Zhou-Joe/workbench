@@ -10,9 +10,12 @@
     <label class="dropzone-pick">or choose
       <input type="file" multiple>
     </label>
+    <label class="dropzone-folder">sub-folder (optional)
+      <input type="text" name="folder" placeholder="e.g. structural/reports — created if missing">
+    </label>
     <p class="dropzone-status" aria-live="polite"></p>
     {% if phase_dir_path %}
-    <p class="hint">Saved to <code>{{ phase_dir_path }}</code> — dropping files there in Finder works the same.</p>
+    <p class="hint">Saved under <code>{{ phase_dir_path }}</code> — sub-folders are indexed too; dropping files into them in Finder works the same.</p>
     {% else %}
     <p class="hint">Set the workspace root in <a href="{% url 'hub:settings' %}">Settings</a> to enable file handling.</p>
     {% endif %}
@@ -64,7 +67,7 @@
     </div>
     {% if current_docs %}
     <table class="doc-table">
-      <thead><tr><th>File</th><th>Series</th><th>Rev</th><th>Size</th><th>Tier</th><th>Status</th></tr></thead>
+      <thead><tr><th>File</th><th>Location</th><th>Series</th><th>Rev</th><th>Size</th><th>Tier</th><th>Status</th></tr></thead>
       <tbody>
         {% for doc in current_docs %}
         <tr>
@@ -75,6 +78,7 @@
               hx-get="{% url 'hub:series_stack' doc.series_id %}"
               hx-target="#series-stack" hx-swap="innerHTML">history</button>{% endif %}
           </td>
+          <td class="num dim">{% if doc.location %}<code>{{ doc.location }}</code>{% else %}—{% endif %}</td>
           <td>{% if doc.series %}{{ doc.series.title }}{% else %}<span class="dim">unassigned</span>{% endif %}</td>
           <td class="num">{% if doc.revision_number %}{{ doc.revision_number }}{% else %}—{% endif %}</td>
           <td class="num">{{ doc.size_bytes|filesizeformat }}</td>
@@ -96,11 +100,12 @@
     <details>
       <summary>Archived revisions ({{ archived|length }})</summary>
       <table class="doc-table">
-        <thead><tr><th>File</th><th>Series</th><th>Rev</th><th>Archived</th><th></th></tr></thead>
+        <thead><tr><th>File</th><th>Location</th><th>Series</th><th>Rev</th><th>Archived</th><th></th></tr></thead>
         <tbody>
           {% for doc in archived %}
           <tr class="dim">
             <td class="doc-name">{{ doc.filename }}</td>
+            <td class="num dim">{% if doc.location %}<code>{{ doc.location }}</code>{% else %}—{% endif %}</td>
             <td>{% if doc.series %}{{ doc.series.title }}{% else %}—{% endif %}</td>
             <td class="num">{% if doc.revision_number %}{{ doc.revision_number }}{% else %}—{% endif %}</td>
             <td class="num">{{ doc.ingested_at|date:"Y-m-d" }}</td>

@@ -21,6 +21,48 @@ class SimilarityTests(TestCase):
         )
 
 
+class NestedFolderScanTests(WorkspaceTestCase):
+    def test_subfolders_indexed_and_dotfiles_skipped(self):
+        from hub import ingest
+        from hub.models import Document
+
+        project = self.seed_project()
+        pdir = self.phase_dir(project, 2)
+        (pdir / "structural" / "calcs").mkdir(parents=True)
+        (pdir / "controls").mkdir()
+        make_text_pdf(pdir / "structural" / "calcs" / "frame-analysis.pdf", "calcs")
+        make_text_pdf(pdir / "controls" / "plc-logic.pdf", "logic")
+        make_text_pdf(pdir / "root-level.pdf", "root")
+        (pdir / ".DS_Store").write_bytes(b"junk")
+        (pdir / "structural" / ".hidden").write_bytes(b"junk")
+
+        new, _ = ingest.scan_project(project)
+        names = sorted(d.filename for d in new)
+        self.assertEqual(
+            names, ["frame-analysis.pdf", "plc-logic.pdf", "root-level.pdf"]
+        )
+        locs = {d.filename: d.location for d in Document.objects.all()}
+        self.assertEqual(locs["frame-analysis.pdf"], "structural/calcs")
+        self.assertEqual(locs["plc-logic.pdf"], "controls")
+        self.assertEqual(locs["root-level.pdf"], "")
+
+    def test_suggestions_prefer_same_subfolder(self):
+        from hub import ingest
+
+        project = self.seed_project()
+        pdir = self.phase_dir(project, 2)
+        (pdir / "structural").mkdir()
+        (pdir / "controls").mkdir()
+        make_text_pdf(pdir / "structural" / "Package_RevA.pdf", "structural copy")
+        make_text_pdf(pdir / "controls" / "Package_RevA.pdf", "controls copy")
+        ingest.scan_project(project)
+        make_text_pdf(pdir / "structural" / "Package_RevB.pdf", "new structural")
+        new, _ = ingest.scan_project(project)
+
+        suggestions = revisions.suggest_predecessors(new[0])
+        self.assertEqual(suggestions[0].location, "structural")
+
+
 class SupersedeTests(WorkspaceTestCase):
     def _drop(self, project, order, filename, text):
         from hub import ingest

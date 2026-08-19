@@ -374,6 +374,7 @@ details form { margin-top: 0.8rem; display: grid; gap: 0.7rem; max-width: 26rem;
   font-size: 0.8rem;
 }
 .dropzone-pick input { width: auto; font-size: 0.78rem; }
+.dropzone-folder { max-width: 26rem; font-size: 0.78rem; }
 .dropzone-status { font-size: 0.8rem; color: var(--accent); min-height: 1.1em; }
 
 /* ---------- phase page ---------- */

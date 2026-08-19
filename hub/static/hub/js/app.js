@@ -75,6 +75,10 @@
       Array.prototype.forEach.call(fileList, function (f) {
         fd.append("files", f);
       });
+      var folderInput = zone.querySelector('input[name="folder"]');
+      if (folderInput && folderInput.value.trim()) {
+        fd.append("folder", folderInput.value.trim());
+      }
       status.textContent =
         "uploading " + fileList.length + " file" +
         (fileList.length > 1 ? "s" : "") + "…";

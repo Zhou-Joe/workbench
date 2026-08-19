@@ -1,6 +1,7 @@
 <div class="unassigned-card" id="unassigned-{{ doc.pk }}">
   <div class="unassigned-file">
     <span class="doc-name">{{ doc.filename }}</span>
+    {% if doc.location %}<span class="dim num"><code>{{ doc.location }}</code></span>{% endif %}
     <span class="dim num">{{ doc.size_bytes|filesizeformat }} · {{ doc.doc_kind }}</span>
     <span class="ext-status ext-{{ doc.extraction_status }}">{{ doc.extraction_status }}</span>
   </div>
@@ -15,6 +16,7 @@
       <button type="submit">
         <span class="num">{{ cand.ingested_at|date:"Y-m-d" }}</span>
         {{ cand.filename }}
+        {% if cand.location %}<span class="dim num"> · {{ cand.location }}/</span>{% endif %}
         {% if cand.series %}<span class="dim"> · {{ cand.series.title }}</span>{% endif %}
       </button>
     </form>

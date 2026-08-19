@@ -101,6 +101,39 @@ class PhaseViewTests(WorkspaceTestCase):
         )
         self.assertEqual(names, {"minutes.docx", "existing.docx"})
 
+    def test_upload_with_subfolder_creates_and_ingests(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from hub.models import Document
+
+        project = self.seed_project()
+        upload = SimpleUploadedFile("report.pdf", b"%PDF-1.4 nested")
+        resp = self.client.post(
+            reverse("hub:phase_upload", args=[project.slug, 2]),
+            {"files": [upload], "folder": "structural/reports"},
+            headers={"HX-Request": "true"},
+        )
+        self.assertEqual(resp.status_code, 200)
+        saved = self.phase_dir(project, 2) / "structural" / "reports" / "report.pdf"
+        self.assertTrue(saved.exists())
+        doc = Document.objects.get(filename="report.pdf")
+        self.assertEqual(doc.location, "structural/reports")
+
+    def test_upload_rejects_unsafe_folder_segments(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        project = self.seed_project()
+        upload = SimpleUploadedFile("x.pdf", b"abc")
+        resp = self.client.post(
+            reverse("hub:phase_upload", args=[project.slug, 1]),
+            {"files": [upload], "folder": "../../outside"},
+            headers={"HX-Request": "true"},
+        )
+        self.assertEqual(resp.status_code, 200)
+        # ".." segments are dropped; the file stays inside the phase folder
+        saved = self.phase_dir(project, 1) / "outside" / "x.pdf"
+        self.assertTrue(saved.exists())
+        self.assertFalse((self.root / "outside").exists())
+
     def test_upload_without_workspace_root_is_bad_request(self):
         from django.core.files.uploadedfile import SimpleUploadedFile
 

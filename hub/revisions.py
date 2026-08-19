@@ -35,10 +35,25 @@ def similarity(a, b):
     return difflib.SequenceMatcher(None, a, b).ratio()
 
 
+def _phase_relative(doc):
+    prefix = f"{doc.phase.project.slug}/{doc.phase.folder_name}/"
+    return doc.file_path[len(prefix):] if doc.file_path.startswith(prefix) else doc.filename
+
+
+def _norm_key(doc):
+    """Location + filename, both normalized, so candidates in the same
+    sub-folder outrank same-named files elsewhere in the phase."""
+    rel = _phase_relative(doc)
+    dirpart, _, filename = rel.rpartition("/")
+    dir_n = re.sub(r"[^a-z0-9]+", " ", dirpart.lower()).strip()
+    stem_n = normalize_stem(filename)
+    return (dir_n + " " + stem_n).strip()
+
+
 def suggest_predecessors(doc, limit=5, floor=0.5):
     """Candidate docs this file might supersede: same phase, latest or
-    unassigned, ranked by normalized filename similarity."""
-    norm = normalize_stem(doc.filename)
+    unassigned, ranked by location-aware filename similarity."""
+    norm = _norm_key(doc)
     candidates = Document.objects.filter(phase=doc.phase).exclude(pk=doc.pk)
     scored = []
     for cand in candidates:
@@ -48,7 +63,7 @@ def suggest_predecessors(doc, limit=5, floor=0.5):
             continue
         # a replacement of the same path is always the strongest signal
         same_path = cand.file_path == doc.file_path
-        score = 1.0 if same_path else similarity(norm, normalize_stem(cand.filename))
+        score = 1.0 if same_path else similarity(norm, _norm_key(cand))
         if same_path or score >= floor:
             scored.append((score, cand))
     scored.sort(key=lambda pair: (-pair[0], pair[1].filename))

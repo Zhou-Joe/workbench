@@ -26,12 +26,22 @@ def phase_upload(request, project_slug, order):
     except RuntimeError as exc:
         return HttpResponseBadRequest(str(exc))
 
+    # optional sub-folder inside the phase, e.g. "structural/reports"
+    folder = request.POST.get("folder", "").strip().strip("/")
+    segments = [
+        s
+        for s in folder.split("/")
+        if s and not s.startswith(".") and s not in ("..", workspace.ARCHIVE_DIR)
+    ]
+    target_dir = pdir.joinpath(*segments) if segments else pdir
+    target_dir.mkdir(parents=True, exist_ok=True)
+
     for uploaded in files:
         # basename only — never trust client paths
         name = Path(uploaded.name).name
         if not name or name.startswith("."):
             continue
-        dest = pdir / name
+        dest = target_dir / name
         with open(dest, "wb") as out:
             for chunk in uploaded.chunks():
                 out.write(chunk)
