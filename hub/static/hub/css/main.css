@@ -530,16 +530,14 @@ details form { margin-top: 0.8rem; display: grid; gap: 0.7rem; max-width: 26rem;
   border-left: 3px solid var(--accent);
   padding-left: 0.5rem;
 }
-.phase-side .phase-tree { flex: 1; min-height: 0; }
-.phase-side .tree-scroll { max-height: none; flex: 1; min-height: 0; overflow: auto; }
-.tree-head {
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  font-weight: 700;
-  padding-bottom: 0.4rem;
-  margin-bottom: 0.4rem;
-  border-bottom: var(--hairline-soft);
+.phase-side .phase-tree-inline {
+  margin: 0.15rem 0 0.45rem;
+  padding-left: 0.55rem;
+  border-left: 3px solid var(--accent);
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  max-height: 60vh;
 }
 .tree-folder { border: none; padding: 0; }
 .tree-folder > summary {
@@ -677,7 +675,8 @@ details form { margin-top: 0.8rem; display: grid; gap: 0.7rem; max-width: 26rem;
     border-right: none;
     padding-right: 0;
   }
-  .phase-side .tree-scroll { max-height: 16rem; }
+  .phase-side .tree-scroll { max-height: none; overflow: visible; }
+  .phase-side .phase-tree-inline { max-height: 16rem; }
 }
 
 @media (max-width: 900px) {
