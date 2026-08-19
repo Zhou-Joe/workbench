@@ -1,0 +1,12 @@
+{% extends "hub/base.html" %}
+{% block title %}Ask — Ride Program Hub{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="crumb"><a href="{% url 'hub:home' %}">Portfolio</a> / Ask</p>
+    <h1>Ask your documents</h1>
+    <p class="hint">Answers come only from extracted document text, with clickable citations.</p>
+  </div>
+</div>
+{% include "hub/_ask_area.html" %}
+{% endblock %}

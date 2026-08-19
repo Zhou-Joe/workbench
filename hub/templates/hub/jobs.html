@@ -1,0 +1,64 @@
+{% extends "hub/base.html" %}
+{% block title %}Jobs — Ride Program Hub{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="crumb"><a href="{% url 'hub:home' %}">Portfolio</a> / Jobs</p>
+    <h1>Pipeline jobs</h1>
+    <p class="hint">
+      {{ counts.queued }} queued · {{ counts.running }} running ·
+      {{ counts.done }} done · {{ counts.failed }} failed
+    </p>
+  </div>
+</div>
+
+<div id="jobs-area"
+     hx-get="{% url 'hub:jobs' %}"
+     hx-select="#jobs-area"
+     hx-swap="outerHTML"
+     hx-trigger="rph:tick from:body, every 10s">
+  <form class="ledger-filters" hx-get="{% url 'hub:jobs' %}"
+        hx-target="#jobs-area" hx-select="#jobs-area" hx-swap="outerHTML">
+    <select name="status">
+      <option value="">all statuses</option>
+      <option value="queued" {% if status_filter == 'queued' %}selected{% endif %}>queued</option>
+      <option value="running" {% if status_filter == 'running' %}selected{% endif %}>running</option>
+      <option value="done" {% if status_filter == 'done' %}selected{% endif %}>done</option>
+      <option value="failed" {% if status_filter == 'failed' %}selected{% endif %}>failed</option>
+    </select>
+    <button type="submit">Filter</button>
+  </form>
+
+  <table class="doc-table">
+    <thead><tr><th>#</th><th>Kind</th><th>Target</th><th>Status</th><th>Attempts</th><th>Started</th><th>Error</th><th></th></tr></thead>
+    <tbody>
+      {% for job in jobs %}
+      <tr class="{% if job.status == 'failed' %}job-failed{% endif %}">
+        <td class="num">{{ job.pk }}</td>
+        <td><span class="tier">{{ job.kind }}</span></td>
+        <td class="doc-name">
+          {% if job.document %}<a class="doc-open" href="{% url 'hub:preview' %}?path={{ job.document.file_path|urlencode }}" target="_blank">{{ job.document.filename }}</a>
+          {% elif job.question %}“{{ job.question.question|truncatechars:60 }}”
+          {% elif job.series %}Δ {{ job.series.title }}
+          {% elif job.phase %}digest · {{ job.phase.order|stringformat:"02d" }} {{ job.phase.name }}
+          {% elif job.project %}report · {{ job.project.name }}
+          {% else %}—{% endif %}
+        </td>
+        <td><span class="ext-status ext-{{ job.status }}">{{ job.status }}</span></td>
+        <td class="num">{{ job.attempts }}</td>
+        <td class="num">{{ job.started_at|date:"m-d H:i:s" }}</td>
+        <td class="job-error">{{ job.error|truncatechars:80 }}</td>
+        <td>
+          {% if job.status == "failed" %}
+          <button class="primary" hx-post="{% url 'hub:job_retry' job.pk %}"
+                  hx-target="#jobs-area" hx-select="#jobs-area" hx-swap="outerHTML">Retry</button>
+          {% endif %}
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="8" class="empty">No jobs yet — drop files into project folders to start the pipeline.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

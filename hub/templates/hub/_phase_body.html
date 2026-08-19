@@ -92,6 +92,7 @@
             <td class="col-sel"><input type="checkbox" name="p" value="{{ f.rel }}"></td>
             <td class="doc-name" title="{{ f.doc.file_path }}">
               <a class="doc-open" href="{% url 'hub:preview' %}?path={{ f.rel|urlencode }}" target="_blank">{{ f.name }}</a>
+              {% for t in f.doc.tags.all|slice:":3" %}<span class="tagchip">{{ t.name }}</span>{% endfor %}
               {% if f.doc.quality_note %}<span class="flag" title="{{ f.doc.quality_note }}">⚑</span>{% endif %}
               {% if f.doc.series_id %}<button type="button" class="linkish"
                 hx-get="{% url 'hub:series_stack' f.doc.series_id %}"

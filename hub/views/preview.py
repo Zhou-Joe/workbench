@@ -45,11 +45,12 @@ def preview(request):
         return HttpResponseBadRequest(str(exc))
     if target is None:
         return HttpResponseBadRequest("file not found")
+    rel = request.GET.get("path", "")
     ext = target.suffix.lower()
     if ext == ".docx":
-        return _preview_docx(request, target)
+        return _preview_docx(request, target, rel)
     if ext in (".xlsx", ".xlsm"):
-        return _preview_xlsx(request, target)
+        return _preview_xlsx(request, target, rel)
     if ext in INLINE_EXTENSIONS:
         return _serve_inline(target)
     return render(
@@ -57,10 +58,41 @@ def preview(request):
         "hub/preview.html",
         {
             "filename": target.name,
-            "path": request.GET.get("path", ""),
+            "path": rel,
             "unsupported": True,
+            "similar": _similar_docs(rel),
         },
     )
+
+
+def _similar_docs(rel, radius=1500):
+    """Top similar indexed documents in the same project, scored by filename
+    stem + extracted-text-prefix similarity (Docspell-style suggestions)."""
+    from ..models import Document
+    from ..revisions import normalize_stem, similarity
+
+    doc = Document.objects.filter(file_path=rel).select_related(
+        "phase", "phase__project"
+    ).first()
+    if doc is None:
+        return []
+    base_stem = normalize_stem(doc.filename)
+    base_text = (doc.extracted_text or "")[:radius].lower()
+    scored = []
+    others = (
+        Document.objects.filter(phase__project=doc.phase.project)
+        .exclude(pk=doc.pk)
+        .select_related("phase", "phase__project")
+    )
+    for other in others:
+        score = similarity(base_stem, normalize_stem(other.filename)) * 2
+        other_text = (other.extracted_text or "")[:radius].lower()
+        if base_text and other_text:
+            score += similarity(base_text, other_text)
+        if score >= 0.5:
+            scored.append((score, other))
+    scored.sort(key=lambda pair: (-pair[0], pair[1].filename))
+    return [d for _, d in scored[:4]]
 
 
 def _serve_inline(target):
@@ -68,7 +100,7 @@ def _serve_inline(target):
     return FileResponse(open(target, "rb"), content_type=content_type)
 
 
-def _preview_docx(request, target):
+def _preview_docx(request, target, rel):
     import mammoth
 
     try:
@@ -84,15 +116,16 @@ def _preview_docx(request, target):
         "hub/preview.html",
         {
             "filename": target.name,
-            "path": request.GET.get("path", ""),
+            "path": rel,
             "kind": "document",
             "body_html": body_html,
             "error": error,
+            "similar": _similar_docs(rel),
         },
     )
 
 
-def _preview_xlsx(request, target):
+def _preview_xlsx(request, target, rel):
     import openpyxl
 
     sheets = []
@@ -118,9 +151,10 @@ def _preview_xlsx(request, target):
         "hub/preview.html",
         {
             "filename": target.name,
-            "path": request.GET.get("path", ""),
+            "path": rel,
             "kind": "sheet",
             "sheets": sheets,
             "error": error,
+            "similar": _similar_docs(rel),
         },
     )

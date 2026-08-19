@@ -18,7 +18,9 @@ from .docs import (
     series_delta,
     undo_archive,
 )
+from .ask import ask, ask_clear
 from .download import download_file, download_folder, download_zip
+from .jobs import job_retry, jobs
 from .preview import preview
 from .milestones import milestone_action, milestone_edit
 from .settings_view import lm_status, settings_view
@@ -49,6 +51,10 @@ __all__ = [
     "download_folder",
     "download_zip",
     "preview",
+    "ask",
+    "ask_clear",
+    "jobs",
+    "job_retry",
     "settings_view",
     "lm_status",
     "sse",

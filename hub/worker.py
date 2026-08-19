@@ -52,6 +52,7 @@ class Worker:
             ExtractionJob.Kind.DIGEST: self.process_digest,
             ExtractionJob.Kind.DELTA: self.process_delta,
             ExtractionJob.Kind.REPORT: self.process_report,
+            ExtractionJob.Kind.ASK: self.process_ask,
         }[job.kind]
         try:
             handler(job)
@@ -136,6 +137,7 @@ class Worker:
                 evidence=str(item.get("evidence", ""))[:2000],
             )
         publish_doc_event(doc, "milestones")
+        _assign_tags(doc, data.get("tags"))
         ExtractionJob.objects.create(phase=phase, kind=ExtractionJob.Kind.DIGEST)
 
     def process_digest(self, job):
@@ -161,6 +163,54 @@ class Worker:
         digest.model_used = settings.lm_model
         digest.save()
         bus.publish("digest", project_id=phase.project_id, phase_id=phase.pk)
+
+    def process_ask(self, job):
+        from .models import Question
+
+        settings = AppSettings.load()
+        question = job.question
+        question.status = Question.Status.RUNNING
+        question.save(update_fields=["status"])
+        docs = _retrieve_documents(question.question, question.project)
+        if not docs:
+            question.answer = (
+                "No extracted documents matched the keywords in this question. "
+                "Drop relevant files into project folders first, wait for "
+                "extraction, then ask again."
+            )
+            question.status = Question.Status.DONE
+            question.answered_at = timezone.now()
+            question.save(update_fields=["answer", "status", "answered_at"])
+            bus.publish("ask", question_id=question.pk)
+            return
+        excerpts = [(d.filename, d.extracted_text or "") for d in docs]
+        content = llm.chat(
+            settings,
+            [
+                {"role": "system", "content": prompts.SYSTEM_ASK},
+                {
+                    "role": "user",
+                    "content": prompts.build_ask_prompt(
+                        question.question, excerpts
+                    ),
+                },
+            ],
+        )
+        question.answer = content
+        question.citations = [
+            {
+                "doc_id": d.pk,
+                "filename": d.filename,
+                "path": d.file_path,
+                "project": d.phase.project.name,
+                "phase": f"{d.phase.order:02d} {d.phase.name}",
+            }
+            for d in docs
+        ]
+        question.status = Question.Status.DONE
+        question.answered_at = timezone.now()
+        question.save()
+        bus.publish("ask", question_id=question.pk)
 
     def process_report(self, job):
         from datetime import timedelta
@@ -233,6 +283,54 @@ class Worker:
             newer.delta_summary = str(data.get("delta", ""))[:1000]
             newer.save(update_fields=["delta_summary"])
         bus.publish("revision", project_id=series.phase.project_id, phase_id=series.phase_id)
+
+
+STOPWORDS = {
+    "the", "and", "for", "what", "when", "where", "which", "why", "how",
+    "did", "does", "was", "were", "are", "is", "about", "with", "that",
+    "this", "from", "have", "has", "had", "any", "all", "our", "their",
+}
+
+
+def _retrieve_documents(question_text, project=None):
+    """Keyword scoring over extracted text; top ASK_MAX_SOURCES documents."""
+    import re as _re
+
+    from .prompts import ASK_MAX_SOURCES
+
+    words = [
+        w for w in _re.findall(r"[a-zA-Z]{3,}", question_text.lower())
+        if w not in STOPWORDS
+    ][:8]
+    if not words:
+        return []
+    docs = Document.objects.exclude(extracted_text="").select_related(
+        "phase", "phase__project"
+    )
+    if project:
+        docs = docs.filter(phase__project=project)
+    scored = []
+    for d in docs:
+        text = (d.extracted_text or "").lower()
+        fname = d.filename.lower()
+        score = sum(text.count(w) * 2 + fname.count(w) * 5 for w in words)
+        if score:
+            scored.append((score, d.pk, d))
+    scored.sort(key=lambda item: (-item[0], item[1]))
+    return [d for _, _, d in scored[:ASK_MAX_SOURCES]]
+
+
+def _assign_tags(doc, raw_tags):
+    from django.utils.text import slugify
+
+    from .models import Tag
+
+    for raw in (raw_tags or [])[:5]:
+        name = slugify(str(raw))[:40]
+        if not name:
+            continue
+        tag, _ = Tag.objects.get_or_create(name=name)
+        doc.tags.add(tag)
 
 
 def parse_date(raw):

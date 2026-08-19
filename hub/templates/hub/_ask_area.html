@@ -1,0 +1,51 @@
+<div id="ask-area"
+     hx-get="{% url 'hub:ask' %}"
+     hx-select="#ask-area"
+     hx-swap="outerHTML"
+     hx-trigger="rph:tick from:body, every 10s">
+  <form class="ask-form"
+        hx-post="{% url 'hub:ask' %}"
+        hx-target="#ask-area" hx-select="#ask-area" hx-swap="outerHTML"
+        hx-on::after-request="if(event.detail.successful) this.reset()">
+    <input type="text" name="q" required
+           placeholder="e.g. What did Vendor X say about the weld inspection?">
+    <select name="project">
+      <option value="">all projects</option>
+      {% for p in projects %}<option value="{{ p.pk }}">{{ p.name }}</option>{% endfor %}
+    </select>
+    <button type="submit" class="primary">Ask</button>
+  </form>
+
+  {% if questions %}
+  <div class="ask-list">
+    {% for question in questions %}
+    <article class="ask-item status-{{ question.status }}">
+      <h3 class="ask-q">{{ question.question }}</h3>
+      {% if question.status == "queued" or question.status == "running" %}
+      <p class="hint">searching documents and thinking…</p>
+      {% elif question.status == "failed" %}
+      <p class="form-error">{{ question.error }}</p>
+      {% else %}
+      <div class="ask-answer">{{ question.answer|linebreaks }}</div>
+      {% if question.citations %}
+      <ol class="ask-cites">
+        {% for c in question.citations %}
+        <li>
+          <a class="doc-open" href="{% url 'hub:preview' %}?path={{ c.path|urlencode }}" target="_blank">{{ c.filename }}</a>
+          <span class="dim num">{{ c.project }} · {{ c.phase }}</span>
+        </li>
+        {% endfor %}
+      </ol>
+      {% endif %}
+      {% endif %}
+    </article>
+    {% endfor %}
+  </div>
+  <form hx-post="{% url 'hub:ask_clear' %}" hx-target="#ask-area" hx-select="#ask-area" hx-swap="outerHTML">
+    <button type="submit">Clear history</button>
+  </form>
+  {% else %}
+  <p class="empty">No questions yet. Ask anything your documents should answer —
+    decisions, vendor commitments, test results, dates.</p>
+  {% endif %}
+</div>

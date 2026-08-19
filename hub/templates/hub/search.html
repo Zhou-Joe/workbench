@@ -27,6 +27,7 @@
         {% if r.doc.location %}{{ r.doc.location }}/ · {% endif %}
         <a href="{% url 'hub:project' r.doc.phase.project.slug %}">{{ r.doc.phase.project.name }}</a>
         · {{ r.doc.phase.order|stringformat:"02d" }} {{ r.doc.phase.name }}
+        {% for t in r.doc.tags.all|slice:":3" %}<span class="tagchip">{{ t.name }}</span>{% endfor %}
       </span>
     </div>
     {% if r.snippet %}<p class="search-snippet">{{ r.snippet }}</p>

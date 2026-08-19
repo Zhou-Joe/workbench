@@ -71,6 +71,16 @@ class DocumentSeries(models.Model):
         return self.title
 
 
+class Tag(models.Model):
+    name = models.SlugField(max_length=40, unique=True)
+
+    class Meta:
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+
 class Document(models.Model):
     class Kind(models.TextChoices):
         PDF = "pdf"
@@ -130,6 +140,7 @@ class Document(models.Model):
     extracted_text = models.TextField(blank=True)
     digest_contribution = models.TextField(blank=True)
     delta_summary = models.TextField(blank=True)
+    tags = models.ManyToManyField(Tag, blank=True, related_name="documents")
     ingested_at = models.DateTimeField(auto_now_add=True)
     extracted_at = models.DateTimeField(null=True, blank=True)
 
@@ -219,6 +230,37 @@ class PhaseDigest(models.Model):
         return f"digest: {self.phase}"
 
 
+class Question(models.Model):
+    class Status(models.TextChoices):
+        QUEUED = "queued"
+        RUNNING = "running"
+        DONE = "done"
+        FAILED = "failed"
+
+    project = models.ForeignKey(
+        Project,
+        on_delete=models.CASCADE,
+        related_name="questions",
+        null=True,
+        blank=True,
+    )
+    question = models.TextField()
+    answer = models.TextField(blank=True)
+    citations = models.JSONField(default=list, blank=True)
+    status = models.CharField(
+        max_length=8, choices=Status, default=Status.QUEUED
+    )
+    error = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    answered_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return self.question[:80]
+
+
 class ExtractionJob(models.Model):
     class Kind(models.TextChoices):
         PARSE = "parse"
@@ -226,6 +268,7 @@ class ExtractionJob(models.Model):
         DIGEST = "digest"
         DELTA = "delta"
         REPORT = "report"
+        ASK = "ask"
 
     class Status(models.TextChoices):
         QUEUED = "queued"
@@ -252,6 +295,13 @@ class ExtractionJob(models.Model):
     )
     project = models.ForeignKey(
         Project, on_delete=models.CASCADE, related_name="report_jobs", null=True, blank=True
+    )
+    question = models.ForeignKey(
+        Question,
+        on_delete=models.CASCADE,
+        related_name="jobs",
+        null=True,
+        blank=True,
     )
     kind = models.CharField(max_length=8, choices=Kind)
     status = models.CharField(

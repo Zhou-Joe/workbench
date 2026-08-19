@@ -37,6 +37,23 @@
   </section>
   {% endfor %}
   {% endif %}
+
+  {% if similar %}
+  <section class="similar-section">
+    <h2>Similar documents</h2>
+    <ul class="similar-list">
+      {% for d in similar %}
+      <li>
+        <a class="doc-open" href="{% url 'hub:preview' %}?path={{ d.file_path|urlencode }}" target="_blank">{{ d.filename }}</a>
+        <span class="dim num">
+          {% if d.location %}{{ d.location }}/ · {% endif %}
+          {{ d.phase.project.name }} · {{ d.phase.order|stringformat:"02d" }} {{ d.phase.name }}
+        </span>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
 </main>
 </body>
 </html>

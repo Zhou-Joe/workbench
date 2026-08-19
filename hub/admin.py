@@ -10,6 +10,9 @@ from .models import (
     Phase,
     PhaseDigest,
     Project,
+    Question,
+    Tag,
+    WeeklyReport,
 )
 
 admin.site.site_header = "Ride Program Hub — admin"
@@ -71,6 +74,24 @@ class ExtractionJobAdmin(admin.ModelAdmin):
 @admin.register(ArchiveMove)
 class ArchiveMoveAdmin(admin.ModelAdmin):
     list_display = ("document", "from_path", "to_path", "moved_at", "undone")
+
+
+@admin.register(Tag)
+class TagAdmin(admin.ModelAdmin):
+    list_display = ("name",)
+    search_fields = ("name",)
+
+
+@admin.register(Question)
+class QuestionAdmin(admin.ModelAdmin):
+    list_display = ("question", "project", "status", "created_at")
+    list_filter = ("status", "project")
+
+
+@admin.register(WeeklyReport)
+class WeeklyReportAdmin(admin.ModelAdmin):
+    list_display = ("project", "model_used", "created_at")
+    list_filter = ("project",)
 
 
 @admin.register(AppSettings)

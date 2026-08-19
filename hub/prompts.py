@@ -4,6 +4,29 @@ import json
 
 MAX_TEXT_CHARS = 24_000
 
+ASK_EXCERPT_CHARS = 4_000
+ASK_MAX_SOURCES = 6
+
+SYSTEM_ASK = """\
+You answer a ride development engineer's questions using ONLY the numbered \
+document excerpts provided. Cite sources inline like [1] or [2][5] after \
+every claim. If the excerpts do not contain the answer, say so plainly and \
+suggest which document kind would likely hold it. Never invent facts, dates \
+or decisions. Answer in the language of the question. Be concise and \
+concrete: names, dates, numbers."""
+
+
+def build_ask_prompt(question, excerpts):
+    """excerpts: list of (filename, text) — numbered [1]..[n]."""
+    parts = [f"Question: {question}", ""]
+    for i, (filename, text) in enumerate(excerpts, start=1):
+        if len(text) > ASK_EXCERPT_CHARS:
+            text = text[:ASK_EXCERPT_CHARS] + "\n[…truncated…]"
+        parts.append(f"[{i}] {filename}")
+        parts.append(text)
+        parts.append("")
+    return "\n".join(parts)
+
 SYSTEM_EXTRACTION = """\
 You extract engineering project milestones from amusement ride development \
 documents. You work for a ride development engineer coordinating multiple \
@@ -21,6 +44,7 @@ Return ONLY a JSON object, no prose before or after, with this exact shape:
       "evidence": "short quote from the document supporting the milestone"
     }
   ],
+  "tags": ["structural", "controls"],
   "digest_contribution": "2-3 sentence summary of this document"
 }
 
@@ -31,6 +55,11 @@ Rules:
 - Keep titles factual and self-contained (a colleague should understand them \
 without opening the document).
 - Confidence between 0.0 and 1.0: how sure you are this is a real milestone.
+- tags: 0-5 discipline tags. Prefer this vocabulary: structural, ride-system, \
+controls, electrical, show, scenic, audio-video, geotechnical, safety, \
+procurement, contracts, permits, schedule, budget, testing, commissioning, \
+vendor-correspondence, meeting-minutes, calculations, drawings, reports. \
+Add a different short tag only when none of these fit.
 """
 
 
