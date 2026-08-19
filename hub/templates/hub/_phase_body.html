@@ -43,51 +43,67 @@
           <span class="folder-name">{{ f.name }}</span>
           <span class="mini num">{{ f.count }} item{{ f.count|pluralize }}</span>
         </a>
+        <a class="dl" href="{% url 'hub:download_folder' %}?project={{ project.slug }}&phase={{ phase.order }}&path={{ f.path|urlencode }}"
+           title="Download {{ f.name }} as ZIP">
+          <svg class="dl-icon" width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1v8M4.5 6.5 8 10l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M2 12v2h12v-2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+        </a>
       </li>
       {% endfor %}
     </ul>
     {% endif %}
 
-    <table class="doc-table">
-      <thead><tr><th>File</th><th>Series</th><th>Rev</th><th>Size</th><th>Modified</th><th>Tier</th><th>Status</th></tr></thead>
-      {% for group in file_groups %}
-      <tbody>
-        <tr class="format-row"><td colspan="7">{{ group.label }}<span class="mini num"> · {{ group.items|length }} file{{ group.items|length|pluralize }}</span></td></tr>
-        {% for f in group.items %}
-        {% if f.doc %}
-        <tr>
-          <td class="doc-name" title="{{ f.doc.file_path }}">
-            {{ f.name }}
-            {% if f.doc.quality_note %}<span class="flag" title="{{ f.doc.quality_note }}">⚑</span>{% endif %}
-            {% if f.doc.series_id %}<button class="linkish"
-              hx-get="{% url 'hub:series_stack' f.doc.series_id %}"
-              hx-target="#series-stack" hx-swap="innerHTML">history</button>{% endif %}
-          </td>
-          <td>{% if f.doc.series %}{{ f.doc.series.title }}{% else %}<span class="dim">unassigned</span>{% endif %}</td>
-          <td class="num">{% if f.doc.revision_number %}{{ f.doc.revision_number }}{% else %}—{% endif %}</td>
-          <td class="num">{{ f.size|filesizeformat }}</td>
-          <td class="num">{{ f.modified }}</td>
-          <td><span class="tier tier-{{ f.doc.extraction_tier }}">{{ f.doc.extraction_tier|default:"—" }}</span></td>
-          <td><span class="ext-status ext-{{ f.doc.extraction_status }}">{{ f.doc.extraction_status }}</span></td>
-        </tr>
-        {% else %}
-        <tr class="dim">
-          <td class="doc-name">{{ f.name }}</td>
-          <td>—</td>
-          <td class="num">—</td>
-          <td class="num">{{ f.size|filesizeformat }}</td>
-          <td class="num">{{ f.modified }}</td>
-          <td>—</td>
-          <td><span class="ext-status ext-pending">not indexed</span></td>
-        </tr>
-        {% endif %}
+    <form class="select-form" action="{% url 'hub:download_zip' %}" method="get">
+      <div class="select-bar">
+        <span class="hint">Select files to download as a ZIP</span>
+        <button type="submit">Download selected</button>
+      </div>
+      <table class="doc-table">
+        <thead><tr><th class="col-sel"></th><th>File</th><th>Series</th><th>Rev</th><th>Size</th><th>Modified</th><th>Tier</th><th>Status</th><th class="col-dl"></th></tr></thead>
+        {% for group in file_groups %}
+        <tbody>
+          <tr class="format-row"><td colspan="9">{{ group.label }}<span class="mini num"> · {{ group.items|length }} file{{ group.items|length|pluralize }}</span></td></tr>
+          {% for f in group.items %}
+          {% if f.doc %}
+          <tr>
+            <td class="col-sel"><input type="checkbox" name="p" value="{{ f.rel }}"></td>
+            <td class="doc-name" title="{{ f.doc.file_path }}">
+              {{ f.name }}
+              {% if f.doc.quality_note %}<span class="flag" title="{{ f.doc.quality_note }}">⚑</span>{% endif %}
+              {% if f.doc.series_id %}<button type="button" class="linkish"
+                hx-get="{% url 'hub:series_stack' f.doc.series_id %}"
+                hx-target="#series-stack" hx-swap="innerHTML">history</button>{% endif %}
+            </td>
+            <td>{% if f.doc.series %}{{ f.doc.series.title }}{% else %}<span class="dim">unassigned</span>{% endif %}</td>
+            <td class="num">{% if f.doc.revision_number %}{{ f.doc.revision_number }}{% else %}—{% endif %}</td>
+            <td class="num">{{ f.size|filesizeformat }}</td>
+            <td class="num">{{ f.modified }}</td>
+            <td><span class="tier tier-{{ f.doc.extraction_tier }}">{{ f.doc.extraction_tier|default:"—" }}</span></td>
+            <td><span class="ext-status ext-{{ f.doc.extraction_status }}">{{ f.doc.extraction_status }}</span></td>
+            <td class="col-dl"><a class="dl" href="{% url 'hub:download_file' %}?path={{ f.rel|urlencode }}" title="Download {{ f.name }}">
+              <svg class="dl-icon" width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1v8M4.5 6.5 8 10l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M2 12v2h12v-2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></a></td>
+          </tr>
+          {% else %}
+          <tr class="dim">
+            <td class="col-sel"><input type="checkbox" name="p" value="{{ f.rel }}"></td>
+            <td class="doc-name">{{ f.name }}</td>
+            <td>—</td>
+            <td class="num">—</td>
+            <td class="num">{{ f.size|filesizeformat }}</td>
+            <td class="num">{{ f.modified }}</td>
+            <td>—</td>
+            <td><span class="ext-status ext-pending">not indexed</span></td>
+            <td class="col-dl"><a class="dl" href="{% url 'hub:download_file' %}?path={{ f.rel|urlencode }}" title="Download {{ f.name }}">
+              <svg class="dl-icon" width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1v8M4.5 6.5 8 10l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M2 12v2h12v-2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></a></td>
+          </tr>
+          {% endif %}
+          {% endfor %}
+        </tbody>
         {% endfor %}
-      </tbody>
-      {% endfor %}
-      {% if not folders and not files %}
-      <tbody><tr><td colspan="7" class="empty">Empty folder. Drop files below, or create a sub-folder.</td></tr></tbody>
-      {% endif %}
-    </table>
+        {% if not folders and not files %}
+        <tbody><tr><td colspan="9" class="empty">Empty folder. Drop files below, or create a sub-folder.</td></tr></tbody>
+        {% endif %}
+      </table>
+    </form>
     <div id="series-stack"></div>
   </section>
 

@@ -372,15 +372,42 @@ details form { margin-top: 0.8rem; display: grid; gap: 0.7rem; max-width: 26rem;
   margin-bottom: 0.6rem;
 }
 .folder-row {
-  width: min(16rem, 100%);
+  flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: 0.55rem;
   padding: 0.45rem 0.5rem;
+}
+.folder-row:hover { background: var(--neutral); color: var(--accent); }
+.folder-list li {
+  display: flex;
+  align-items: stretch;
+  width: min(16rem, 100%);
   border-right: var(--hairline-soft);
   border-bottom: var(--hairline-soft);
 }
-.folder-row:hover { background: var(--neutral); color: var(--accent); }
+
+.dl {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 0.4rem;
+  color: var(--ink-soft);
+  border-left: var(--hairline-soft);
+}
+.dl:hover { color: var(--accent); background: var(--neutral); }
+.dl-icon { display: block; }
+
+.select-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.3rem 0 0.6rem;
+}
+.col-sel { width: 2rem; text-align: center; }
+.col-sel input[type="checkbox"] { accent-color: var(--accent); }
+.col-dl { width: 2.2rem; }
+.doc-table td.col-dl, .doc-table th.col-dl { padding: 0.3rem 0; text-align: center; }
 .folder-icon { width: 1rem; height: 1rem; fill: var(--accent); flex: none; }
 .folder-name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .folder-row .mini { margin-left: auto; }

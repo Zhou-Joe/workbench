@@ -92,6 +92,7 @@ def _listing(phase, settings, current, cur_dir):
                 files.append(
                     {
                         "name": name,
+                        "rel": rel,
                         "size": stat.st_size if stat else 0,
                         "mtime": stat.st_mtime if stat else 0,
                         "modified": _display_date(

@@ -15,6 +15,7 @@ from .docs import (
     series_delta,
     undo_archive,
 )
+from .download import download_file, download_folder, download_zip
 from .milestones import milestone_action, milestone_edit
 from .settings_view import lm_status, settings_view
 from .sse import sse
@@ -37,6 +38,9 @@ __all__ = [
     "undo_archive",
     "milestone_action",
     "milestone_edit",
+    "download_file",
+    "download_folder",
+    "download_zip",
     "settings_view",
     "lm_status",
     "sse",
