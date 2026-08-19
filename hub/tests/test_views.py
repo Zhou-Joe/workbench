@@ -3,7 +3,12 @@ from django.urls import reverse
 
 from hub import ingest
 from hub.models import AppSettings, Document, Milestone, Project
-from hub.tests.helpers import WorkspaceTestCase, make_docx
+from hub.tests.helpers import (
+    WorkspaceTestCase,
+    make_docx,
+    make_fake_cad,
+    make_text_pdf,
+)
 from hub.worker import Worker
 
 
@@ -208,6 +213,30 @@ class PhaseViewTests(WorkspaceTestCase):
         self.assertTrue(
             (self.phase_dir(project, 1) / "vendor-a" / "calc-reports").is_dir()
         )
+
+    def test_files_grouped_by_format_newest_first(self):
+        import os
+        from datetime import datetime, timezone as tz
+
+        project = self.seed_project()
+        pdir = self.phase_dir(project, 2)
+        make_text_pdf(pdir / "old-report.pdf", "old")
+        make_text_pdf(pdir / "new-report.pdf", "new")
+        make_docx(pdir / "minutes.docx", ["m"])
+        make_fake_cad(pdir / "layout.dwg")
+        now = datetime.now(tz.utc).timestamp()
+        os.utime(pdir / "old-report.pdf", (now - 864_000, now - 864_000))
+        os.utime(pdir / "new-report.pdf", (now, now))
+        ingest.scan_project(project)
+
+        resp = self.client.get(reverse("hub:phase", args=[project.slug, 2]))
+        html = resp.content.decode()
+        # group order: PDF before DOCX before DWG
+        self.assertLess(html.index(">PDF<"), html.index(">DOCX<"))
+        self.assertLess(html.index(">DOCX<"), html.index(">DWG<"))
+        # newest first inside the PDF group (file table renders before the
+        # unassigned panel, so first occurrences are the table rows)
+        self.assertLess(html.index("new-report.pdf"), html.index("old-report.pdf"))
 
     def test_browse_three_levels_deep(self):
         project = self.seed_project()

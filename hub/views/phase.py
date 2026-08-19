@@ -1,11 +1,51 @@
+from datetime import datetime, timezone as dt_timezone
 from pathlib import Path
 
 from django.http import HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, render
+from django.utils.timezone import localtime
 from django.views.decorators.http import require_POST
 
-from .. import revisions, workspace
+from .. import extract, revisions, workspace
 from ..models import AppSettings, Document, Milestone, Phase
+
+# group order: PDF, office docs, email, CAD, images, everything else last
+_KIND_CATEGORY = {
+    "pdf": 0,
+    "office": 1,
+    "email": 2,
+    "cad": 3,
+    "image": 4,
+    "other": 9,
+}
+
+
+def _format_key(extension):
+    ext = (extension or "").lstrip(".").lower()
+    kind = extract.kind_for_extension("." + ext) if ext else "other"
+    return (_KIND_CATEGORY.get(kind, 9), ext or "file")
+
+
+def _display_date(dt):
+    if dt is None:
+        return "—"
+    return localtime(dt).strftime("%Y-%m-%d")
+
+
+def group_by_format(items, ext_of, time_of):
+    """Group items by file format; groups ordered PDF → office → email →
+    CAD → image → other (alphabetical inside a category), newest first
+    within each group."""
+    buckets = {}
+    for item in items:
+        key = _format_key(ext_of(item))
+        buckets.setdefault(key, []).append(item)
+    groups = []
+    for key in sorted(buckets):
+        items_in = sorted(buckets[key], key=time_of, reverse=True)
+        label = key[1].upper()
+        groups.append({"label": label, "items": items_in})
+    return groups
 
 
 def _browse_path(request, phase, settings):
@@ -46,11 +86,21 @@ def _listing(phase, settings, current, cur_dir):
             elif child.is_file():
                 rel = child.relative_to(ws_root).as_posix()
                 try:
-                    size = child.stat().st_size
+                    stat = child.stat()
                 except OSError:
-                    size = 0
+                    stat = None
                 files.append(
-                    {"name": name, "size": size, "doc": docs_by_path.get(rel)}
+                    {
+                        "name": name,
+                        "size": stat.st_size if stat else 0,
+                        "mtime": stat.st_mtime if stat else 0,
+                        "modified": _display_date(
+                            datetime.fromtimestamp(stat.st_mtime, tz=dt_timezone.utc)
+                        )
+                        if stat
+                        else "—",
+                        "doc": docs_by_path.get(rel),
+                    }
                 )
     return folders, files
 
@@ -77,11 +127,17 @@ def phase_detail(request, project_slug, order):
         current, cur_dir, phase_dir_path = "", None, None
 
     folders = files = []
+    file_groups = []
     if cur_dir is not None:
         folders, files = _listing(phase, settings, current, cur_dir)
+        file_groups = group_by_format(
+            files,
+            ext_of=lambda f: Path(f["name"]).suffix,
+            time_of=lambda f: f["mtime"],
+        )
 
     # root-only panels: phase-wide concerns
-    unassigned = pending_milestones = archived = None
+    unassigned = pending_milestones = archived = archived_groups = None
     suggestions = {}
     digest = getattr(phase, "digest", None)
     if not current:
@@ -94,10 +150,15 @@ def phase_detail(request, project_slug, order):
         pending_milestones = Milestone.objects.filter(
             phase=phase, status=Milestone.Status.EXTRACTED
         ).select_related("document")
-        archived = (
+        archived = list(
             Document.objects.filter(phase=phase, file_path__contains="/_archive/")
             .select_related("series")
             .order_by("-ingested_at")
+        )
+        archived_groups = group_by_format(
+            archived,
+            ext_of=lambda d: d.extension,
+            time_of=lambda d: d.ingested_at,
         )
 
     # breadcrumb segments with cumulative paths
@@ -116,6 +177,8 @@ def phase_detail(request, project_slug, order):
         "crumbs": crumbs,
         "folders": folders,
         "files": files,
+        "file_groups": file_groups,
+        "archived_groups": archived_groups,
         "phase_dir_path": phase_dir_path,
         "phase_url": _phase_url(project, phase, current),
         "unassigned": unassigned,

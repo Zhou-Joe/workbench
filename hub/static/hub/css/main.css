@@ -385,6 +385,19 @@ details form { margin-top: 0.8rem; display: grid; gap: 0.7rem; max-width: 26rem;
 .folder-name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .folder-row .mini { margin-left: auto; }
 
+.format-row td {
+  background: var(--neutral);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  color: var(--ink);
+  padding: 0.32rem 0.6rem;
+  border-top: var(--hairline-soft);
+  border-bottom: var(--hairline-soft);
+}
+.format-row .mini { color: var(--ink-soft); font-weight: 400; }
+
 .new-folder { border: none; padding: 0; }
 .new-folder form {
   display: flex;

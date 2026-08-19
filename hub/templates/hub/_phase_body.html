@@ -49,9 +49,11 @@
     {% endif %}
 
     <table class="doc-table">
-      <thead><tr><th>File</th><th>Series</th><th>Rev</th><th>Size</th><th>Tier</th><th>Status</th></tr></thead>
+      <thead><tr><th>File</th><th>Series</th><th>Rev</th><th>Size</th><th>Modified</th><th>Tier</th><th>Status</th></tr></thead>
+      {% for group in file_groups %}
       <tbody>
-        {% for f in files %}
+        <tr class="format-row"><td colspan="7">{{ group.label }}<span class="mini num"> · {{ group.items|length }} file{{ group.items|length|pluralize }}</span></td></tr>
+        {% for f in group.items %}
         {% if f.doc %}
         <tr>
           <td class="doc-name" title="{{ f.doc.file_path }}">
@@ -64,6 +66,7 @@
           <td>{% if f.doc.series %}{{ f.doc.series.title }}{% else %}<span class="dim">unassigned</span>{% endif %}</td>
           <td class="num">{% if f.doc.revision_number %}{{ f.doc.revision_number }}{% else %}—{% endif %}</td>
           <td class="num">{{ f.size|filesizeformat }}</td>
+          <td class="num">{{ f.modified }}</td>
           <td><span class="tier tier-{{ f.doc.extraction_tier }}">{{ f.doc.extraction_tier|default:"—" }}</span></td>
           <td><span class="ext-status ext-{{ f.doc.extraction_status }}">{{ f.doc.extraction_status }}</span></td>
         </tr>
@@ -73,15 +76,17 @@
           <td>—</td>
           <td class="num">—</td>
           <td class="num">{{ f.size|filesizeformat }}</td>
+          <td class="num">{{ f.modified }}</td>
           <td>—</td>
           <td><span class="ext-status ext-pending">not indexed</span></td>
         </tr>
         {% endif %}
         {% endfor %}
-        {% if not folders and not files %}
-        <tr><td colspan="6" class="empty">Empty folder. Drop files below, or create a sub-folder.</td></tr>
-        {% endif %}
       </tbody>
+      {% endfor %}
+      {% if not folders and not files %}
+      <tbody><tr><td colspan="7" class="empty">Empty folder. Drop files below, or create a sub-folder.</td></tr></tbody>
+      {% endif %}
     </table>
     <div id="series-stack"></div>
   </section>
@@ -149,8 +154,10 @@
       <summary>Archived revisions ({{ archived|length }})</summary>
       <table class="doc-table">
         <thead><tr><th>File</th><th>Location</th><th>Series</th><th>Rev</th><th>Archived</th><th></th></tr></thead>
+        {% for group in archived_groups %}
         <tbody>
-          {% for doc in archived %}
+          <tr class="format-row"><td colspan="6">{{ group.label }}<span class="mini num"> · {{ group.items|length }}</span></td></tr>
+          {% for doc in group.items %}
           <tr class="dim">
             <td class="doc-name">{{ doc.filename }}</td>
             <td class="num dim">{% if doc.location %}<code>{{ doc.location }}</code>{% else %}—{% endif %}</td>
@@ -168,6 +175,7 @@
           </tr>
           {% endfor %}
         </tbody>
+        {% endfor %}
       </table>
     </details>
   </section>
