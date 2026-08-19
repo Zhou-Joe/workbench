@@ -502,7 +502,78 @@ details form { margin-top: 0.8rem; display: grid; gap: 0.7rem; max-width: 26rem;
 .phase-head { align-items: flex-start; }
 .phase-edit { max-width: 28rem; }
 
-.phase-body { display: grid; gap: 1.8rem; }
+.phase-body {
+  display: grid;
+  grid-template-columns: 13rem minmax(0, 1fr);
+  gap: 1.8rem;
+  align-items: start;
+}
+
+/* ---------- phase sidebar tree ---------- */
+
+.phase-tree {
+  position: sticky;
+  top: 1.5rem;
+  border-right: var(--hairline-soft);
+  padding-right: 0.8rem;
+  font-size: 0.8rem;
+}
+.tree-head {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  padding-bottom: 0.4rem;
+  margin-bottom: 0.4rem;
+  border-bottom: var(--hairline-soft);
+}
+.tree-scroll { max-height: 72vh; overflow: auto; }
+.tree-folder { border: none; padding: 0; }
+.tree-folder > summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  padding: 0.15rem 0;
+  color: var(--ink-soft);
+}
+.tree-folder > summary::-webkit-details-marker { display: none; }
+.tree-folder > summary::before {
+  content: "▸";
+  font-size: 0.65rem;
+  width: 0.85rem;
+  flex: none;
+  color: var(--ink-soft);
+}
+.tree-folder[open] > summary::before { content: "▾"; }
+.tree-link {
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+}
+.tree-link:hover { color: var(--accent); }
+.tree-here {
+  color: var(--accent);
+  font-weight: 700;
+  border-left: 3px solid var(--accent);
+  padding-left: 0.3rem;
+  margin-left: -0.35rem;
+}
+.tree-children {
+  margin-left: 0.85rem;
+  border-left: var(--hairline-soft);
+  padding-left: 0.35rem;
+}
+.tree-files { list-style: none; padding: 0.1rem 0; }
+.tree-files li {
+  padding: 0.12rem 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tree-files a { color: var(--ink-soft); }
+.tree-files a:hover { color: var(--accent); }
 .panel { border: var(--hairline); padding: 1.1rem 1.3rem 1.3rem; }
 .panel-warn { border-left: 4px solid var(--accent); }
 .digest { font-size: 0.9rem; max-width: 46rem; }
@@ -584,6 +655,12 @@ details form { margin-top: 0.8rem; display: grid; gap: 0.7rem; max-width: 26rem;
 .lm-status.down .dot { border: var(--hairline); }
 
 /* ---------- responsive ---------- */
+
+@media (max-width: 1100px) {
+  .phase-body { grid-template-columns: 1fr; }
+  .phase-tree { position: static; border-right: none; padding-right: 0; }
+  .tree-scroll { max-height: 16rem; }
+}
 
 @media (max-width: 900px) {
   .track { grid-template-columns: 1fr; }

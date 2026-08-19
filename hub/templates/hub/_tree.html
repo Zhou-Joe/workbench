@@ -1,0 +1,26 @@
+{% comment %}
+Recursive sidebar tree for the current phase. Folders are collapsible
+(<details>) and auto-expanded along the browsed path; file names open the
+in-browser preview.
+{% endcomment %}
+{% for node in tree.folders %}
+<details class="tree-folder" {% if node.expanded %}open{% endif %}>
+  <summary>
+    <a class="tree-link {% if node.current %}tree-here{% endif %}"
+       hx-get="{% url 'hub:phase' project.slug phase.order %}?path={{ node.path|urlencode }}"
+       hx-target="#phase-body" hx-select="#phase-body" hx-swap="outerHTML"
+       hx-push-url="true">{{ node.name }}</a>
+  </summary>
+  <div class="tree-children">
+    {% include "hub/_tree.html" with tree=node.subtree %}
+  </div>
+</details>
+{% endfor %}
+{% if tree.files %}
+<ul class="tree-files">
+  {% for f in tree.files %}
+  <li><a class="doc-open" href="{% url 'hub:preview' %}?path={{ f.wsrel|urlencode }}" target="_blank" title="{{ f.name }}">{{ f.name }}</a></li>
+  {% endfor %}
+  {% if tree.truncated %}<li class="mini dim">… and {{ tree.hidden }} more</li>{% endif %}
+</ul>
+{% endif %}

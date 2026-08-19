@@ -180,7 +180,11 @@ class PhaseViewTests(WorkspaceTestCase):
             reverse("hub:phase", args=[project.slug, 2]), {"path": "structural"}
         )
         self.assertContains(deep_view, "deep.docx")
-        self.assertNotContains(deep_view, "top.docx")
+        # the main file table lists only the browsed folder (the sidebar
+        # tree legitimately shows the whole phase, top.docx included)
+        self.assertNotContains(
+            deep_view, 'class="doc-name" title="cosmic-coaster/02-phase-2/top.docx"'
+        )
         self.assertContains(deep_view, "structural")
 
     def test_browse_rejects_path_escape(self):
@@ -237,6 +241,32 @@ class PhaseViewTests(WorkspaceTestCase):
         # newest first inside the PDF group (file table renders before the
         # unassigned panel, so first occurrences are the table rows)
         self.assertLess(html.index("new-report.pdf"), html.index("old-report.pdf"))
+
+    def test_sidebar_tree_current_phase_only(self):
+        project = self.seed_project()
+        # files in phase 1 and phase 2 — tree must show only the browsed phase
+        make_docx(self.phase_dir(project, 1) / "phase-one.docx", ["1"])
+        deep = self.phase_dir(project, 2) / "a" / "b"
+        deep.mkdir(parents=True)
+        make_docx(deep / "bottom.docx", ["2"])
+        ingest.scan_project(project)
+
+        resp = self.client.get(reverse("hub:phase", args=[project.slug, 2]))
+        html = resp.content.decode()
+        self.assertIn("tree-folder", html)
+        self.assertIn("bottom.docx", html)  # appears in tree
+        self.assertNotIn("phase-one.docx", html)  # other phase excluded
+
+        # browsing deep auto-expands the path's ancestors
+        deep_resp = self.client.get(
+            reverse("hub:phase", args=[project.slug, 2]), {"path": "a/b"}
+        )
+        deep_html = deep_resp.content.decode()
+        self.assertGreaterEqual(
+            deep_resp.content.decode().count('<details class="tree-folder" open'),
+            2,
+        )
+        self.assertIn('class="tree-link tree-here"', deep_html)
 
     def test_browse_three_levels_deep(self):
         project = self.seed_project()

@@ -113,6 +113,62 @@ def _phase_url(project, phase, path=""):
     return f"{url}?path={path}" if path else url
 
 
+TREE_FILE_LIMIT = 50
+
+
+def _build_tree(phase, settings, current):
+    """Sidebar tree of the current phase: nested folders (collapsible,
+    auto-expanded along the browsed path) and file leaves."""
+    try:
+        root = workspace.phase_dir(settings, phase.project, phase).resolve()
+        ws_root = Path(settings.expanded_workspace_root()).resolve()
+    except (RuntimeError, AttributeError):
+        return None
+    if not root.is_dir():
+        return None
+
+    def build(directory, prefix):
+        folders, files = [], []
+        try:
+            children = sorted(
+                directory.iterdir(), key=lambda p: p.name.lower()
+            )
+        except OSError:
+            children = []
+        for child in children:
+            name = child.name
+            if name.startswith(".") or name == workspace.ARCHIVE_DIR:
+                continue
+            rel_path = f"{prefix}/{name}" if prefix else name
+            if child.is_dir():
+                folders.append(
+                    {
+                        "name": name,
+                        "path": rel_path,
+                        "expanded": current == rel_path
+                        or current.startswith(rel_path + "/"),
+                        "current": current == rel_path,
+                        "subtree": build(child, rel_path),
+                    }
+                )
+            elif child.is_file():
+                files.append(
+                    {
+                        "name": name,
+                        "wsrel": child.relative_to(ws_root).as_posix(),
+                    }
+                )
+        hidden = max(0, len(files) - TREE_FILE_LIMIT)
+        return {
+            "folders": folders,
+            "files": files[:TREE_FILE_LIMIT],
+            "truncated": hidden > 0,
+            "hidden": hidden,
+        }
+
+    return build(root, "")
+
+
 def phase_detail(request, project_slug, order):
     phase = get_object_or_404(
         Phase, project__slug=project_slug, order=order
@@ -170,10 +226,15 @@ def phase_detail(request, project_slug, order):
             acc = f"{acc}/{seg}" if acc else seg
             crumbs.append({"name": seg, "path": acc})
 
+    phase_tree = None
+    if cur_dir is not None:
+        phase_tree = _build_tree(phase, settings, current)
+
     context = {
         "project": project,
         "phase": phase,
         "phases": phases,
+        "phase_tree": phase_tree,
         "current": current,
         "crumbs": crumbs,
         "folders": folders,
