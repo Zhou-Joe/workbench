@@ -78,15 +78,34 @@ def attention_context():
 def home(request):
     projects = Project.objects.prefetch_related("phases").order_by("name")
     tracks = [track_context(p) for p in projects]
+    from ..models import Protocol
+
     return render(
         request,
         "hub/portfolio.html",
         {
             "tracks": tracks,
             "has_root": bool(AppSettings.load().expanded_workspace_root()),
+            "protocols": Protocol.objects.prefetch_related("phases"),
             **attention_context(),
         },
     )
+
+
+def _protocol_phases(request):
+    """Resolve the chosen protocol's phases, falling back to the built-in
+    six-phase ride template when none exist yet."""
+    from ..models import Protocol
+
+    proto = None
+    protocol_id = request.POST.get("protocol", "")
+    if protocol_id:
+        proto = Protocol.objects.filter(pk=protocol_id).first()
+    if proto is None:
+        proto = Protocol.objects.filter(is_default=True).first()
+    if proto and proto.phases.exists():
+        return proto, [(p.name, p.extraction_focus) for p in proto.phases.all()]
+    return proto, list(PHASE_TEMPLATE)
 
 
 def project_create(request):
@@ -102,13 +121,15 @@ def project_create(request):
     while Project.objects.filter(slug=unique).exists():
         unique = f"{slug}-{i}"
         i += 1
+    proto, phases = _protocol_phases(request)
     project = Project.objects.create(
         name=name,
         slug=unique,
         code=request.POST.get("code", "").strip(),
         description=request.POST.get("description", "").strip(),
+        protocol=proto,
     )
-    for order, (phase_name, focus) in enumerate(PHASE_TEMPLATE, start=1):
+    for order, (phase_name, focus) in enumerate(phases, start=1):
         make_phase(project, phase_name, order, focus)
     scaffold_warning = ""
     try:

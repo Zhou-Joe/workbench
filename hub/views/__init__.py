@@ -25,6 +25,16 @@ from .jobs import job_retry, jobs
 from .palette import palette
 from .preview import preview
 from .tasks import task_delete, task_edit, task_new, task_panel, task_status
+from .protocols import (
+    protocol_default,
+    protocol_delete,
+    protocol_new,
+    protocol_phase_add,
+    protocol_phase_delete,
+    protocol_phase_move,
+    protocol_phase_rename,
+    protocols,
+)
 from .timeline import project_calendar, project_timeline
 from .milestones import milestone_action, milestone_edit
 from .settings_view import lm_status, settings_view
@@ -63,6 +73,14 @@ __all__ = [
     "capture_skip",
     "inbox",
     "palette",
+    "protocols",
+    "protocol_new",
+    "protocol_default",
+    "protocol_delete",
+    "protocol_phase_add",
+    "protocol_phase_rename",
+    "protocol_phase_move",
+    "protocol_phase_delete",
     "project_calendar",
     "project_timeline",
     "task_panel",

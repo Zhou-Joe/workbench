@@ -21,6 +21,38 @@ urlpatterns = [
     path("capture/<int:capture_id>/file/", views.capture_file, name="capture_file"),
     path("capture/<int:capture_id>/skip/", views.capture_skip, name="capture_skip"),
     path("palette/", views.palette, name="palette"),
+    path("protocols/", views.protocols, name="protocols"),
+    path("protocols/new/", views.protocol_new, name="protocol_new"),
+    path(
+        "protocols/<int:protocol_id>/default/",
+        views.protocol_default,
+        name="protocol_default",
+    ),
+    path(
+        "protocols/<int:protocol_id>/delete/",
+        views.protocol_delete,
+        name="protocol_delete",
+    ),
+    path(
+        "protocols/<int:protocol_id>/phases/add/",
+        views.protocol_phase_add,
+        name="protocol_phase_add",
+    ),
+    path(
+        "protocols/<int:protocol_id>/phases/<int:phase_id>/rename/",
+        views.protocol_phase_rename,
+        name="protocol_phase_rename",
+    ),
+    path(
+        "protocols/<int:protocol_id>/phases/<int:phase_id>/move/",
+        views.protocol_phase_move,
+        name="protocol_phase_move",
+    ),
+    path(
+        "protocols/<int:protocol_id>/phases/<int:phase_id>/delete/",
+        views.protocol_phase_delete,
+        name="protocol_phase_delete",
+    ),
     path(
         "project/<slug>/calendar.ics",
         views.project_calendar,

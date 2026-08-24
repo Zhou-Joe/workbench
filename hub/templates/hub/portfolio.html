@@ -22,6 +22,13 @@
       <label>Name
         <input type="text" name="name" required placeholder="e.g. Cosmic Coaster — Phase II">
       </label>
+      <label>Protocol
+        <select name="protocol">
+          {% for p in protocols %}
+          <option value="{{ p.pk }}" {% if p.is_default %}selected{% endif %}>{{ p.name }}{% if p.is_default %} (default){% endif %}</option>
+          {% endfor %}
+        </select>
+      </label>
       <label>Code
         <input type="text" name="code" placeholder="CC2">
       </label>
@@ -29,6 +36,8 @@
         <input type="text" name="description" placeholder="One line of context (optional)">
       </label>
       <button type="submit" class="primary">Create project</button>
+      <span class="hint span2">Protocols define the phase structure — manage them on the
+        <a href="{% url 'hub:protocols' %}">Protocols</a> page.</span>
     </div>
   </form>
 </details>

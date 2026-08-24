@@ -1,0 +1,12 @@
+{% extends "hub/base.html" %}
+{% block title %}Protocols — Ride Program Hub{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="crumb"><a href="{% url 'hub:home' %}">Portfolio</a> / Protocols</p>
+    <h1>Project protocols</h1>
+    <p class="hint">Phase templates used when creating projects. Editing a protocol never changes existing projects — they keep their own phase copies.</p>
+  </div>
+</div>
+{% include "hub/_protocols_area.html" %}
+{% endblock %}

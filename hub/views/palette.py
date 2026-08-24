@@ -14,6 +14,7 @@ def palette(request):
         {"label": "Pipeline jobs", "url": reverse("hub:jobs")},
         {"label": "Search documents", "url": reverse("hub:search")},
         {"label": "Settings", "url": reverse("hub:settings")},
+        {"label": "Protocols (phase templates)", "url": reverse("hub:protocols")},
     ]
     for p in Project.objects.prefetch_related("phases").order_by("name"):
         items.append({"label": p.name, "url": reverse("hub:project", args=[p.slug])})

@@ -100,7 +100,9 @@ def phase_add(request, slug):
     if position.startswith("after:"):
         after = int(position.split(":", 1)[1])
         order = after + 1
-        for ph in phases:
+        # shift from the highest order down — forward iteration would
+        # transiently collide with the unique (project, order) constraint
+        for ph in reversed(phases):
             if ph.order >= order:
                 ph.order += 1
                 ph.save(update_fields=["order"])

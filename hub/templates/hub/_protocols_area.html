@@ -1,0 +1,95 @@
+<div id="protocols-area"
+     hx-get="{% url 'hub:protocols' %}"
+     hx-select="#protocols-area"
+     hx-swap="outerHTML"
+     hx-trigger="rph:tick from:body, every 120s">
+  <details class="new-protocol">
+    <summary>New protocol</summary>
+    <form hx-post="{% url 'hub:protocol_new' %}"
+          hx-target="#protocols-area" hx-select="#protocols-area" hx-swap="outerHTML"
+          hx-on::after-request="if(event.detail.successful) this.reset()">
+      <div class="form-grid">
+        <label>Name
+          <input type="text" name="name" required placeholder="e.g. Show Development">
+        </label>
+        <label>Start from
+          <select name="copy_from">
+            <option value="">empty protocol</option>
+            {% for p in protocols %}<option value="{{ p.pk }}">copy of {{ p.name }}</option>{% endfor %}
+          </select>
+        </label>
+        <label class="span2">Description
+          <input type="text" name="description" placeholder="one line (optional)">
+        </label>
+        <button type="submit" class="primary">Create protocol</button>
+      </div>
+    </form>
+  </details>
+
+  <div class="protocol-list">
+    {% for p in protocols %}
+    <section class="protocol-card {% if p.is_default %}protocol-default{% endif %}">
+      <header class="protocol-head">
+        <h2>{{ p.name }}{% if p.is_default %} <span class="chip">default</span>{% endif %}</h2>
+        <span class="hint">{{ p.phases.count }} phase{{ p.phases.count|pluralize }}{% if p.description %} · {{ p.description }}{% endif %}</span>
+        <span class="protocol-actions">
+          {% if not p.is_default %}
+          <button hx-post="{% url 'hub:protocol_default' p.pk %}"
+                  hx-target="#protocols-area" hx-select="#protocols-area" hx-swap="outerHTML"
+                  hx-confirm="Make “{{ p.name }}” the default for new projects?">Set default</button>
+          {% endif %}
+          <button hx-post="{% url 'hub:protocol_delete' p.pk %}"
+                  hx-target="#protocols-area" hx-select="#protocols-area" hx-swap="outerHTML"
+                  hx-confirm="Delete protocol “{{ p.name }}”? Existing projects are not affected.">Delete</button>
+        </span>
+      </header>
+      <ol class="protocol-phases">
+        {% for ph in p.phases.all %}
+        <li class="protocol-phase">
+          <span class="num">{{ ph.order|stringformat:"02d" }}</span>
+          <span class="protocol-phase-name">{{ ph.name }}</span>
+          <span class="protocol-phase-focus dim">{{ ph.extraction_focus|truncatechars:60 }}</span>
+          <span class="protocol-phase-actions">
+            <button hx-post="{% url 'hub:protocol_phase_move' p.pk ph.pk %}" hx-vals='{"direction": "up"}'
+                    hx-target="#protocols-area" hx-select="#protocols-area" hx-swap="outerHTML"
+                    hx-confirm="Move “{{ ph.name }}” up one position?" {% if forloop.first %}disabled{% endif %}>↑</button>
+            <button hx-post="{% url 'hub:protocol_phase_move' p.pk ph.pk %}" hx-vals='{"direction": "down"}'
+                    hx-target="#protocols-area" hx-select="#protocols-area" hx-swap="outerHTML"
+                    hx-confirm="Move “{{ ph.name }}” down one position?" {% if forloop.last %}disabled{% endif %}>↓</button>
+            <button hx-post="{% url 'hub:protocol_phase_delete' p.pk ph.pk %}"
+                    hx-target="#protocols-area" hx-select="#protocols-area" hx-swap="outerHTML"
+                    hx-confirm="Remove phase “{{ ph.name }}” from this protocol?">✕</button>
+          </span>
+          <details class="protocol-phase-edit">
+            <summary>Edit</summary>
+            <form hx-post="{% url 'hub:protocol_phase_rename' p.pk ph.pk %}"
+                  hx-target="#protocols-area" hx-select="#protocols-area" hx-swap="outerHTML">
+              <label>Name <input type="text" name="name" value="{{ ph.name }}" required></label>
+              <label>Extraction focus <input type="text" name="extraction_focus" value="{{ ph.extraction_focus }}"></label>
+              <button type="submit">Save</button>
+            </form>
+          </details>
+        </li>
+        {% endfor %}
+      </ol>
+      <details class="protocol-add-phase">
+        <summary>Add phase</summary>
+        <form hx-post="{% url 'hub:protocol_phase_add' p.pk %}"
+              hx-target="#protocols-area" hx-select="#protocols-area" hx-swap="outerHTML">
+          <label>Name <input type="text" name="name" required></label>
+          <label>Position
+            <select name="position">
+              <option value="end">after all phases</option>
+              {% for ph in p.phases.all %}
+              <option value="after:{{ ph.order }}">after {{ ph.order|stringformat:"02d" }} {{ ph.name }}</option>
+              {% endfor %}
+            </select>
+          </label>
+          <label>Extraction focus <input type="text" name="extraction_focus" placeholder="what to look for in this phase"></label>
+          <button type="submit">Add</button>
+        </form>
+      </details>
+    </section>
+    {% endfor %}
+  </div>
+</div>

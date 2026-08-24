@@ -367,6 +367,28 @@ mark { background: #ffe3d6; color: inherit; padding: 0 0.1em; }
 .dropzone-wrap[open] { border-style: solid; }
 .dropzone-wrap .dropzone { border: none; padding: 0.6rem 0 0.2rem; }
 
+/* ---------- protocols ---------- */
+
+.new-protocol { margin-bottom: 1.4rem; }
+.protocol-list { display: grid; gap: 1.2rem; max-width: 54rem; }
+.protocol-card { border: var(--hairline); padding: 0.9rem 1.1rem; }
+.protocol-default { border-left: 4px solid var(--accent); }
+.protocol-head { display: flex; gap: 1rem; align-items: baseline; flex-wrap: wrap; border-bottom: var(--hairline-soft); padding-bottom: 0.5rem; margin-bottom: 0.6rem; }
+.protocol-head h2 { font-size: 1rem; }
+.protocol-actions { margin-left: auto; display: flex; gap: 0.4rem; }
+.protocol-phases { list-style: none; display: grid; gap: 0.25rem; }
+.protocol-phase { display: flex; gap: 0.7rem; align-items: center; font-size: 0.85rem; flex-wrap: wrap; border-bottom: var(--hairline-soft); padding: 0.3rem 0; }
+.protocol-phase:last-child { border-bottom: none; }
+.protocol-phase-name { font-weight: 600; min-width: 12rem; }
+.protocol-phase-focus { font-size: 0.76rem; flex: 1; }
+.protocol-phase-actions { display: flex; gap: 0.3rem; }
+.protocol-phase-actions button { font-size: 0.72rem; padding: 0.15rem 0.4rem; }
+.protocol-phase-edit { border: none; padding: 0; }
+.protocol-phase-edit > summary { font-size: 0.72rem; color: var(--accent); cursor: pointer; }
+.protocol-phase-edit form { display: grid; gap: 0.5rem; max-width: 26rem; border: none; padding: 0; margin-top: 0.4rem; }
+.protocol-add-phase { margin-top: 0.6rem; border: 1px dashed #d9d9db; padding: 0.35rem 0.6rem; }
+.protocol-add-phase form { display: grid; gap: 0.5rem; max-width: 26rem; border: none; padding: 0; margin-top: 0.4rem; }
+
 /* ---------- decisions & report ---------- */
 
 .decisions-table .ms-evidence { font-size: 0.8rem; color: var(--ink-soft); max-width: 26rem; }

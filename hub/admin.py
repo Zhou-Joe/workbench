@@ -10,6 +10,8 @@ from .models import (
     Phase,
     PhaseDigest,
     Project,
+    Protocol,
+    ProtocolPhase,
     Question,
     Tag,
     Task,
@@ -75,6 +77,17 @@ class ExtractionJobAdmin(admin.ModelAdmin):
 @admin.register(ArchiveMove)
 class ArchiveMoveAdmin(admin.ModelAdmin):
     list_display = ("document", "from_path", "to_path", "moved_at", "undone")
+
+
+@admin.register(Protocol)
+class ProtocolAdmin(admin.ModelAdmin):
+    list_display = ("name", "is_default", "description")
+
+
+@admin.register(ProtocolPhase)
+class ProtocolPhaseAdmin(admin.ModelAdmin):
+    list_display = ("protocol", "order", "name")
+    list_filter = ("protocol",)
 
 
 @admin.register(Task)

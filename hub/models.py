@@ -2,11 +2,64 @@ from django.db import models
 from django.utils.text import slugify
 
 
+class Protocol(models.Model):
+    """A named phase template for creating projects (e.g. the six-phase
+    ride development lifecycle). Projects copy phases from a protocol at
+    creation time; editing a protocol never changes existing projects."""
+
+    name = models.CharField(max_length=200)
+    description = models.CharField(max_length=400, blank=True)
+    is_default = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-is_default", "name"]
+
+    def __str__(self):
+        suffix = " · default" if self.is_default else ""
+        return f"{self.name}{suffix}"
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if self.is_default:
+            Protocol.objects.exclude(pk=self.pk).update(is_default=False)
+
+
+class ProtocolPhase(models.Model):
+    protocol = models.ForeignKey(
+        Protocol, on_delete=models.CASCADE, related_name="phases"
+    )
+    name = models.CharField(max_length=200)
+    order = models.PositiveSmallIntegerField()
+    extraction_focus = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["order"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["protocol", "order"], name="uniq_protocol_phase_order"
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.protocol.name} / {self.order:02d} {self.name}"
+
+
 class Project(models.Model):
     name = models.CharField(max_length=200)
     slug = models.SlugField(max_length=200, unique=True)
     code = models.CharField(max_length=32, blank=True)
     description = models.TextField(blank=True)
+    protocol = models.ForeignKey(
+        Protocol,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="projects",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
