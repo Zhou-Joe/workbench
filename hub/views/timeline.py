@@ -110,10 +110,13 @@ def project_timeline(request, slug):
         ]
 
     chart_height = max(y + BOTTOM_PAD, TOP_PAD + BOTTOM_PAD)
+    from .tasks import tasks_context
+
     return render(
         request,
         "hub/timeline.html",
         {
+            **tasks_context(project),
             "project": project,
             "task_rows": task_rows,
             "rows": milestone_rows,

@@ -67,12 +67,14 @@ class TaskBoardTests(WorkspaceTestCase):
         )
         self.assertFalse(Task.objects.exists())
 
-    def test_project_page_shows_three_columns(self):
+    def test_timeline_page_shows_three_columns(self):
         project = self.seed_project()
         Task.objects.create(project=project, title="A", status="planned")
         Task.objects.create(project=project, title="B", status="current")
         Task.objects.create(project=project, title="C", status="done")
-        page = self.client.get(reverse("hub:project", args=[project.slug]))
+        page = self.client.get(
+            reverse("hub:project_timeline", args=[project.slug])
+        )
         html = page.content.decode()
         self.assertIn("Planned", html)
         self.assertIn("In progress", html)
@@ -80,6 +82,9 @@ class TaskBoardTests(WorkspaceTestCase):
         self.assertIn("A", html)
         self.assertIn("B", html)
         self.assertIn("C", html)
+        # the ledger page stays a pure extracted-record view
+        ledger = self.client.get(reverse("hub:project", args=[project.slug]))
+        self.assertNotIn("taskcols", ledger.content.decode())
 
     def test_overdue_detection(self):
         project = self.seed_project()
