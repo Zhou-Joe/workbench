@@ -32,17 +32,16 @@
     <button hx-post="{% url 'hub:task_delete' t.pk %}"
             hx-target="#taskboard" hx-select="#taskboard" hx-swap="outerHTML"
             hx-confirm="Delete task “{{ t.title }}”? This cannot be undone.">Delete</button>
+    <details class="task-edit">
+      <summary>Edit</summary>
+      <form hx-post="{% url 'hub:task_edit' t.pk %}"
+            hx-target="#taskboard" hx-select="#taskboard" hx-swap="outerHTML">
+        <label>Title <input type="text" name="title" value="{{ t.title }}" required></label>
+        <label>Start <input type="date" name="start_date" value="{{ t.start_date|date:'Y-m-d' }}"></label>
+        <label>End <input type="date" name="end_date" value="{{ t.end_date|date:'Y-m-d' }}"></label>
+        <label>Notes <input type="text" name="notes" value="{{ t.notes }}"></label>
+        <button type="submit">Save</button>
+      </form>
+    </details>
   </div>
-
-  <details class="task-edit">
-    <summary>Edit</summary>
-    <form hx-post="{% url 'hub:task_edit' t.pk %}"
-          hx-target="#taskboard" hx-select="#taskboard" hx-swap="outerHTML">
-      <label>Title <input type="text" name="title" value="{{ t.title }}" required></label>
-      <label>Start <input type="date" name="start_date" value="{{ t.start_date|date:'Y-m-d' }}"></label>
-      <label>End <input type="date" name="end_date" value="{{ t.end_date|date:'Y-m-d' }}"></label>
-      <label>Notes <input type="text" name="notes" value="{{ t.notes }}"></label>
-      <button type="submit">Save</button>
-    </form>
-  </details>
 </article>
