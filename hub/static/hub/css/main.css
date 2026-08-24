@@ -240,7 +240,15 @@ mark { background: #ffe3d6; color: inherit; padding: 0 0.1em; }
 .taskcard.status-current .tprog-fill { background: var(--accent); }
 .taskcard.status-done .tprog-fill { background: var(--ink); }
 .tprog-fill.tprog-overdue { background: var(--accent); }
-.task-actions { display: flex; gap: 0.35rem; flex-wrap: wrap; margin-top: 0.35rem; }
+.task-actions {
+  display: flex; gap: 0.35rem; flex-wrap: wrap; margin-top: 0.35rem;
+  opacity: 0; transition: opacity 120ms linear;
+}
+.taskcard:hover .task-actions,
+.taskcard:focus-within .task-actions { opacity: 1; }
+@media (hover: none) {
+  .task-actions { opacity: 1; }
+}
 .task-actions button { font-size: 0.72rem; padding: 0.2rem 0.5rem; }
 .task-edit { margin-top: 0.3rem; border: none; padding: 0; }
 .task-edit form { display: grid; gap: 0.5rem; max-width: 24rem; border: none; padding: 0; margin-top: 0.4rem; }
