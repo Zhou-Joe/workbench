@@ -22,8 +22,14 @@
       </a>
       <form class="phase-move" hx-post="{% url 'hub:phase_move' project.slug ph.pk %}"
             hx-target="#phase-rail-wrap" hx-select="#phase-rail-wrap" hx-swap="outerHTML">
-        <button name="direction" value="up" aria-label="Move phase up" {% if forloop.first %}disabled{% endif %}>↑</button>
-        <button name="direction" value="down" aria-label="Move phase down" {% if forloop.last %}disabled{% endif %}>↓</button>
+        <button name="direction" value="up" aria-label="Move phase up"
+                title="Move this phase up one position (renumbers the sequence)"
+                hx-confirm="Move “{{ ph.name }}” up one position? The phase sequence renumbers and its folder is renamed accordingly."
+                {% if forloop.first %}disabled{% endif %}>↑</button>
+        <button name="direction" value="down" aria-label="Move phase down"
+                title="Move this phase down one position (renumbers the sequence)"
+                hx-confirm="Move “{{ ph.name }}” down one position? The phase sequence renumbers and its folder is renamed accordingly."
+                {% if forloop.last %}disabled{% endif %}>↓</button>
       </form>
     </li>
     {% endfor %}

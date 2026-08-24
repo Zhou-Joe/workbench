@@ -60,6 +60,9 @@ class ProjectViewTests(WorkspaceTestCase):
 
     def test_phase_move_swaps_and_renumbers(self):
         project = self.seed_project()
+        # the rail renders confirmation prompts on the reorder buttons
+        page = self.client.get(reverse("hub:project", args=[project.slug]))
+        self.assertContains(page, "hx-confirm=")
         ph2 = project.phases.get(order=2)
         resp = self.client.post(
             reverse("hub:phase_move", args=[project.slug, ph2.pk]),
