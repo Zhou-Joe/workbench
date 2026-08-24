@@ -35,6 +35,8 @@ def job_retry(request, job_id):
     if job.status == ExtractionJob.Status.FAILED:
         job.status = ExtractionJob.Status.QUEUED
         job.error = ""
-        job.save(update_fields=["status", "error"])
+        job.attempts = 0  # a manual retry deserves a fresh budget
+        job.run_after = None
+        job.save(update_fields=["status", "error", "attempts", "run_after"])
         bus.publish("jobs")
     return jobs(request)

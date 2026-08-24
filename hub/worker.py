@@ -4,6 +4,7 @@ import logging
 import threading
 
 from django.db import close_old_connections
+from django.db.models import Q
 from django.utils import timezone
 
 from . import extract, llm, prompts
@@ -13,6 +14,10 @@ from .models import AppSettings, Document, ExtractionJob, Milestone, PhaseDigest
 logger = logging.getLogger(__name__)
 
 MAX_ATTEMPTS = 3
+
+
+def models_run_after_ready():
+    return Q(run_after__isnull=True) | Q(run_after__lte=timezone.now())
 
 
 class Worker:
@@ -33,6 +38,7 @@ class Worker:
         while True:
             job = (
                 ExtractionJob.objects.filter(status=ExtractionJob.Status.QUEUED)
+                .filter(models_run_after_ready())
                 .order_by("pk")
                 .first()
             )
@@ -59,6 +65,7 @@ class Worker:
             handler(job)
             job.status = ExtractionJob.Status.DONE
             job.error = ""
+            job.run_after = None
         except Exception as exc:
             logger.exception("job %s failed", job)
             job.error = f"{exc.__class__.__name__}: {exc}"
@@ -66,6 +73,14 @@ class Worker:
             job.status = (
                 ExtractionJob.Status.QUEUED if retryable else ExtractionJob.Status.FAILED
             )
+            if retryable and isinstance(exc, llm.LLMUnavailable):
+                # exponential-ish backoff so a down LM Studio doesn't burn
+                # all retries in milliseconds
+                from datetime import timedelta
+
+                job.run_after = timezone.now() + timedelta(
+                    seconds=min(30 * job.attempts, 180)
+                )
             if job.document_id and not retryable:
                 doc = Document.objects.filter(pk=job.document_id).first()
                 if doc:
@@ -74,7 +89,7 @@ class Worker:
                     publish_doc_event(doc, "failed")
         finally:
             job.finished_at = timezone.now()
-            job.save(update_fields=["status", "error", "finished_at"])
+            job.save(update_fields=["status", "error", "run_after", "finished_at"])
 
     # -- handlers ---------------------------------------------------------
 
@@ -106,6 +121,9 @@ class Worker:
         settings = AppSettings.load()
         doc = job.document
         phase = doc.phase
+        # idempotency: a failed earlier attempt of this job may already have
+        # created some milestones — start clean so retries never duplicate
+        doc.milestones.all().delete()
         user_prompt = prompts.build_extraction_prompt(phase, doc)
         content = llm.chat(
             settings,

@@ -50,13 +50,17 @@ def _norm_key(doc):
     return (dir_n + " " + stem_n).strip()
 
 
-def suggest_predecessors(doc, limit=5, floor=0.5):
+def suggest_predecessors(doc, limit=5, floor=0.5, candidates=None):
     """Candidate docs this file might supersede: same phase, latest or
-    unassigned, ranked by location-aware filename similarity."""
+    unassigned, ranked by location-aware filename similarity. Pass
+    pre-fetched deferred-field candidates to avoid per-doc queries."""
     norm = _norm_key(doc)
-    candidates = Document.objects.filter(phase=doc.phase).exclude(pk=doc.pk)
+    if candidates is None:
+        candidates = Document.objects.filter(phase=doc.phase).exclude(pk=doc.pk)
     scored = []
     for cand in candidates:
+        if cand.pk == doc.pk:
+            continue
         if cand.is_archived:
             continue
         if cand.series_id and not cand.is_latest:

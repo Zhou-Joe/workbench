@@ -5,6 +5,8 @@ import logging
 from datetime import datetime, timezone
 from pathlib import Path
 
+from django.db import IntegrityError
+
 from . import extract, workspace
 from .events import publish_doc_event
 from .models import AppSettings, Document, ExtractionJob, Phase, Project
@@ -12,15 +14,40 @@ from .models import AppSettings, Document, ExtractionJob, Phase, Project
 logger = logging.getLogger(__name__)
 
 
+_CKSUM_CACHE = {}  # abs path -> (size, mtime, checksum); bounded below
+_CKSUM_CACHE_MAX = 20_000
+
+
 def checksum_of(path, chunk_size=1024 * 1024):
-    h = hashlib.sha256()
-    with open(path, "rb") as f:
-        while True:
-            chunk = f.read(chunk_size)
-            if not chunk:
-                break
-            h.update(chunk)
-    return h.hexdigest()
+    """SHA-256 of a file, cached by (size, mtime) so repeated scans don't
+    re-hash unchanged files. Returns None when the file is unreadable or was
+    modified while being read (partial copy) — the next scan picks it up."""
+    try:
+        before = path.stat()
+    except OSError:
+        return None
+    key = str(path)
+    cached = _CKSUM_CACHE.get(key)
+    if cached and cached[0] == before.st_size and cached[1] == before.st_mtime:
+        return cached[2]
+    try:
+        h = hashlib.sha256()
+        with open(path, "rb") as f:
+            while True:
+                chunk = f.read(chunk_size)
+                if not chunk:
+                    break
+                h.update(chunk)
+        after = path.stat()
+    except OSError:
+        return None
+    if before.st_size != after.st_size or before.st_mtime != after.st_mtime:
+        return None
+    digest = h.hexdigest()
+    if len(_CKSUM_CACHE) >= _CKSUM_CACHE_MAX:
+        _CKSUM_CACHE.clear()
+    _CKSUM_CACHE[key] = (after.st_size, after.st_mtime, digest)
+    return digest
 
 
 def scan_project(project, settings=None):
@@ -47,9 +74,9 @@ def scan_project(project, settings=None):
             rel = file_path.relative_to(ws_root).as_posix()
             # files anywhere under an _archive/ dir are superseded revisions
             if f"/{workspace.ARCHIVE_DIR}/" in f"/{rel}":
-                _ensure_archived_indexed(phase, file_path, rel, root, settings)
+                _ensure_archived_indexed(phase, file_path, rel)
                 continue
-            doc = _ingest_file(phase, file_path, rel, root, settings)
+            doc = _ingest_file(phase, file_path, rel)
             if doc is None:
                 continue
             if doc.filename and _is_replacement(doc):
@@ -83,37 +110,45 @@ def _is_replacement(doc):
     )
 
 
-def _ingest_file(phase, file_path, rel, root, settings):
+def _ingest_file(phase, file_path, rel):
     """Create a Document + parse job for a file if not yet indexed."""
     try:
         stat = file_path.stat()
     except OSError:
         return None
     checksum = checksum_of(file_path)
+    if not checksum:
+        return None  # unreadable or still being written — next scan retries
     existing = Document.objects.filter(
         phase=phase, file_path=rel, checksum=checksum
     ).first()
     if existing:
         return None
     ext = file_path.suffix.lower()
-    doc = Document.objects.create(
-        phase=phase,
-        file_path=rel,
-        filename=file_path.name,
-        extension=ext,
-        size_bytes=stat.st_size,
-        file_mtime=datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc),
-        checksum=checksum,
-        doc_kind=extract.kind_for_extension(ext),
-    )
+    try:
+        doc = Document.objects.create(
+            phase=phase,
+            file_path=rel,
+            filename=file_path.name,
+            extension=ext,
+            size_bytes=stat.st_size,
+            file_mtime=datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc),
+            checksum=checksum,
+            doc_kind=extract.kind_for_extension(ext),
+        )
+    except IntegrityError:
+        # concurrent scan (watcher + upload + rescan) inserted first
+        return None
     ExtractionJob.objects.create(document=doc, kind=ExtractionJob.Kind.PARSE)
     publish_doc_event(doc, "detected")
     return doc
 
 
-def _ensure_archived_indexed(phase, file_path, rel, root, settings):
+def _ensure_archived_indexed(phase, file_path, rel):
     """Files under _archive/ are indexed as superseded revisions (no jobs)."""
     checksum = checksum_of(file_path)
+    if not checksum:
+        return
     if Document.objects.filter(phase=phase, file_path=rel, checksum=checksum).exists():
         return
     try:
@@ -141,17 +176,3 @@ def rescan(project):
     settings = AppSettings.load()
     workspace.sync_phase_dirs(settings, project)
     return scan_project(project, settings)
-
-
-def watch_targets(settings):
-    root = settings.expanded_workspace_root()
-    if not root:
-        return {}
-    folders = {}
-    for project in Project.objects.all():
-        proot = Path(root) / project.slug
-        if not proot.exists():
-            continue
-        for phase in project.phases.all():
-            folders[phase.folder_name] = phase
-    return folders

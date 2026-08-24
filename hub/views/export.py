@@ -28,6 +28,8 @@ def project_export(request, slug):
         zf.writestr("ridehub-data.json", json.dumps(data, indent=1, default=_jsonify))
         if root.is_dir():
             for child in sorted(root.rglob("*")):
+                if child.is_symlink():
+                    continue  # never follow links out of the workspace
                 rel = child.relative_to(root)
                 if any(part.startswith(".") for part in rel.parts):
                     continue

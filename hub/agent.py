@@ -90,14 +90,27 @@ def _build_tools(settings, project, remember, folder_path=""):
         if str(candidate).startswith(str(ws_root)) and candidate.is_dir():
             scope_dir = candidate
 
+    # A folder-scoped question whose folder no longer resolves must NOT
+    # silently widen to the whole project — tools report the scope error.
+    scope_broken = bool(folder_path) and scope_dir is None
+
     def _in_scope(rel_path):
+        if scope_broken:
+            return False
         if scope_dir is None:
             return True
         return rel_path == folder_path or rel_path.startswith(folder_path + "/")
 
+    SCOPE_ERROR = (
+        f"error: the question is scoped to folder '{folder_path}' which no "
+        "longer exists (renamed or moved) — ask again from the folder view"
+    )
+
     def list_projects_and_phases() -> str:
         """Describe the current scope: the project(s)/phases/folder the
         question is about. Call this first when you don't know where to look."""
+        if scope_broken:
+            return SCOPE_ERROR
         if scope_dir is not None:
             docs = Document.objects.filter(
                 file_path__startswith=folder_path + "/"
@@ -121,6 +134,8 @@ def _build_tools(settings, project, remember, folder_path=""):
         """List folders and files. Returns workspace-relative paths usable
         with read_document. When the question is folder-scoped, pass path as
         the sub-folder inside that scope (project/phase args are ignored)."""
+        if scope_broken:
+            return SCOPE_ERROR
         if scope_dir is not None:
             base = scope_dir
         else:
@@ -185,6 +200,8 @@ def _build_tools(settings, project, remember, folder_path=""):
         """Full-text search across extracted documents (filenames and
         content) within the question's scope. Returns matching paths with
         context — then use read_document on the best hits."""
+        if scope_broken:
+            return SCOPE_ERROR
         q = query.strip()
         if len(q) < 2:
             return "error: query too short"
@@ -214,6 +231,8 @@ def _build_tools(settings, project, remember, folder_path=""):
         risks, actions) with their source documents, within the question's
         scope. milestone_type is one of: gate, decision, deliverable, issue,
         risk, action."""
+        if scope_broken:
+            return SCOPE_ERROR
         qs = Milestone.objects.exclude(status="dismissed").select_related(
             "phase", "phase__project", "document"
         )

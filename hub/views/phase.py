@@ -68,7 +68,9 @@ def _listing(phase, settings, current, cur_dir):
     ws_root = Path(settings.expanded_workspace_root()).resolve()
     docs_by_path = {
         d.file_path: d
-        for d in Document.objects.filter(phase=phase).select_related("series")
+        for d in Document.objects.filter(phase=phase)
+        .select_related("series")
+        .defer("extracted_text", "digest_contribution", "delta_summary")
     }
     folders, files = [], []
     if cur_dir.exists():
@@ -202,15 +204,26 @@ def phase_detail(request, project_slug, order):
         unassigned = list(
             Document.objects.filter(phase=phase, series__isnull=True)
             .exclude(file_path__contains="/_archive/")
+            .defer("extracted_text", "digest_contribution", "delta_summary")
             .order_by("-ingested_at")
         )
-        suggestions = {d.pk: revisions.suggest_predecessors(d) for d in unassigned}
+        # one deferred-fields query for all similarity candidates (no N+1)
+        candidates = list(
+            Document.objects.filter(phase=phase)
+            .exclude(file_path__contains="/_archive/")
+            .defer("extracted_text", "digest_contribution", "delta_summary")
+        )
+        suggestions = {
+            d.pk: revisions.suggest_predecessors(d, candidates=candidates)
+            for d in unassigned
+        }
         pending_milestones = Milestone.objects.filter(
             phase=phase, status=Milestone.Status.EXTRACTED
         ).select_related("document")
         archived = list(
             Document.objects.filter(phase=phase, file_path__contains="/_archive/")
             .select_related("series")
+            .defer("extracted_text", "digest_contribution", "delta_summary")
             .order_by("-ingested_at")
         )
         archived_groups = group_by_format(

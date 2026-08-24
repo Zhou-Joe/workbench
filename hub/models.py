@@ -494,6 +494,11 @@ class ExtractionJob(models.Model):
         max_length=8, choices=Status, default=Status.QUEUED
     )
     attempts = models.PositiveSmallIntegerField(default=0)
+    run_after = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Backoff gate: queued job is skipped until this time",
+    )
     error = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     started_at = models.DateTimeField(null=True, blank=True)

@@ -86,6 +86,8 @@ def _zip_response(entries, zip_name):
 def _dir_entries(dir_path):
     entries = []
     for child in sorted(dir_path.rglob("*")):
+        if child.is_symlink():
+            continue  # never follow links out of the workspace
         rel = child.relative_to(dir_path)
         if any(part.startswith(".") for part in rel.parts):
             continue
@@ -134,11 +136,15 @@ def download_zip(request):
         return HttpResponseBadRequest("no files selected")
     try:
         settings = AppSettings.load()
+        root = _resolved_root(settings)
         entries = []
         for rel in paths:
             target = _safe_file(settings, rel)
             if target is not None:
-                entries.append((target, rel))
+                # sanitized arcname — never trust the raw client path
+                entries.append(
+                    (target, target.relative_to(root).as_posix())
+                )
     except RuntimeError as exc:
         return HttpResponseBadRequest(str(exc))
     return _zip_response(entries, "ridehub-selection.zip")

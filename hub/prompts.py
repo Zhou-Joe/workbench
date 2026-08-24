@@ -19,6 +19,8 @@ does not belong to any project, return null for project_slug."""
 
 
 def build_capture_prompt(text, projects_info):
+    if len(text) > 2000:
+        text = text[:2000] + "\n[…truncated…]"
     parts = ["NOTE:", text, "", "AVAILABLE DESTINATIONS:"]
     for slug, name, order, phase_name, focus in projects_info:
         parts.append(f"- {slug} / phase {order:02d} {phase_name}" + (f" — {focus}" if focus else ""))
@@ -122,6 +124,11 @@ facts. Max ~250 words."""
 
 
 def build_digest_prompt(phase, contributions, milestones):
+    if len(contributions) > 60:
+        omitted = len(contributions) - 60
+        contributions = [
+            ("…", f"[{omitted} older documents omitted]")
+        ] + contributions[-60:]
     parts = [f"Project: {phase.project.name}", f"Phase: {phase.order:02d} {phase.name}", ""]
     if contributions:
         parts.append("DOCUMENT SUMMARIES:")
@@ -134,8 +141,6 @@ def build_digest_prompt(phase, contributions, milestones):
             date_s = date.isoformat() if date else "no date"
             parts.append(f"- {date_s} [{mtype}] ({status}) {title}")
         parts.append("")
-    if len(contributions) > 60:
-        parts = parts[:10] + ["[…older entries truncated…]"] + parts[-60:]
     return "\n".join(parts)
 
 

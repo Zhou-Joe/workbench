@@ -43,7 +43,10 @@ def scaffold_project(settings, project, phases):
 
 def safe_subpath(base_dir, path_str):
     """Validate a user-supplied relative path ('a/b') against base_dir.
-    Returns the resolved Path, or None when any segment is unsafe."""
+    Unsafe segments are dropped; the result always resolves to base_dir or
+    something strictly inside it (separator-bounded check, symlink-proof)."""
+    import os
+
     segments = [
         s
         for s in (path_str or "").strip("/").split("/")
@@ -51,9 +54,10 @@ def safe_subpath(base_dir, path_str):
     ]
     candidate = base_dir.joinpath(*segments) if segments else base_dir
     resolved = candidate.resolve()
-    if str(resolved).startswith(str(base_dir.resolve())):
+    base = base_dir.resolve()
+    if resolved == base or str(resolved).startswith(str(base) + os.sep):
         return resolved
-    return base_dir.resolve()
+    return base
 
 
 def folder_item_count(path):
@@ -92,7 +96,9 @@ def create_subfolder(settings, project, phase, path_str, name):
 
 def sync_phase_dirs(settings, project):
     """After add/rename/reorder: rename existing phase folders to their new
-    order/slug, then create any missing ones. File contents are untouched."""
+    order/slug, then create any missing ones. Document paths are rewritten
+    to follow folder renames so the index never orphans. File contents are
+    untouched."""
     root = project_root(settings, project)
     if not root.exists():
         scaffold_project(settings, project, project.phases.all())
@@ -116,9 +122,29 @@ def sync_phase_dirs(settings, project):
             child.rename(tmp)
             child = tmp
         child.rename(dest)
+        _rewrite_document_prefix(project, f"{project.slug}/{child.name}/", f"{project.slug}/{dest.name}/")
     # Pass 2: create folders for phases that do not have one yet.
     for phase in project.phases.all():
         (root / phase.folder_name).mkdir(parents=True, exist_ok=True)
+
+
+def _rewrite_document_prefix(project, old_prefix, new_prefix):
+    """Keep Document.file_path (and archive rows) pointing at real files
+    after a phase folder rename."""
+    from django.db.models import Value
+    from django.db.models.functions import Replace
+
+    from .models import ArchiveMove, Document
+
+    Document.objects.filter(file_path__startswith=old_prefix).update(
+        file_path=Replace("file_path", Value(old_prefix), Value(new_prefix))
+    )
+    ArchiveMove.objects.filter(from_path__startswith=old_prefix).update(
+        from_path=Replace("from_path", Value(old_prefix), Value(new_prefix))
+    )
+    ArchiveMove.objects.filter(to_path__startswith=old_prefix).update(
+        to_path=Replace("to_path", Value(old_prefix), Value(new_prefix))
+    )
 
 
 def unique_folder_name(path):

@@ -80,9 +80,12 @@ def _similar_docs(rel, radius=1500):
     base_text = (doc.extracted_text or "")[:radius].lower()
     scored = []
     others = (
-        Document.objects.filter(phase__project=doc.phase.project)
+        Document.objects.filter(
+            phase__project=doc.phase.project, extension=doc.extension
+        )
         .exclude(pk=doc.pk)
         .select_related("phase", "phase__project")
+        .defer("digest_contribution", "delta_summary")[:60]
     )
     for other in others:
         score = similarity(base_stem, normalize_stem(other.filename)) * 2
@@ -97,7 +100,12 @@ def _similar_docs(rel, radius=1500):
 
 def _serve_inline(target):
     content_type = mimetypes.guess_type(target.name)[0] or "application/octet-stream"
-    return FileResponse(open(target, "rb"), content_type=content_type)
+    resp = FileResponse(open(target, "rb"), content_type=content_type)
+    if target.suffix.lower() == ".svg":
+        # SVG can carry scripts; sandbox it so it stays a picture, not code
+        resp["Content-Security-Policy"] = "sandbox"
+    resp["X-Content-Type-Options"] = "nosniff"
+    return resp
 
 
 def _preview_docx(request, target, rel):
@@ -130,6 +138,7 @@ def _preview_xlsx(request, target, rel):
 
     sheets = []
     error = ""
+    wb = None
     try:
         wb = openpyxl.load_workbook(target, read_only=True, data_only=True)
         for ws in wb.worksheets:
@@ -143,9 +152,11 @@ def _preview_xlsx(request, target, rel):
                     ["" if c is None else str(c) for c in row[:XLSX_COL_LIMIT]]
                 )
             sheets.append({"name": ws.title, "rows": rows, "truncated": truncated})
-        wb.close()
     except Exception as exc:
         error = f"{exc.__class__.__name__}: {exc}"
+    finally:
+        if wb is not None:
+            wb.close()
     return render(
         request,
         "hub/preview.html",

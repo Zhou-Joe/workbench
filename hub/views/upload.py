@@ -33,7 +33,7 @@ def phase_upload(request, project_slug, order):
         ]
         target_dir = base.joinpath(*segments) if segments else base
         target_dir.mkdir(parents=True, exist_ok=True)
-    except RuntimeError as exc:
+    except (RuntimeError, OSError) as exc:
         return HttpResponseBadRequest(str(exc))
 
     for uploaded in files:
