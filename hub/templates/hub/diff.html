@@ -1,0 +1,55 @@
+{% extends "hub/base.html" %}
+{% block title %}Diff — {{ series.title }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="crumb"><a href="{% url 'hub:home' %}">Portfolio</a> /
+      <a href="{% url 'hub:project' series.phase.project.slug %}">{{ series.phase.project.name }}</a> /
+      Diff · {{ series.title }}</p>
+    <h1>Revision diff</h1>
+  </div>
+</div>
+
+{% if too_few %}
+<p class="empty">This series has fewer than two revisions — nothing to compare yet.</p>
+{% else %}
+<form class="diff-pick" method="get" action="{% url 'hub:series_diff' series.pk %}">
+  <label>Old
+    <select name="a">
+      {% for d in stack %}
+      <option value="{{ d.pk }}" {% if d.pk == doc_a.pk %}selected{% endif %}>r{{ d.revision_number|default:'—' }} · {{ d.filename }} ({{ d.ingested_at|date:"Y-m-d" }})</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label>New
+    <select name="b">
+      {% for d in stack %}
+      <option value="{{ d.pk }}" {% if d.pk == doc_b.pk %}selected{% endif %}>r{{ d.revision_number|default:'—' }} · {{ d.filename }} ({{ d.ingested_at|date:"Y-m-d" }})</option>
+      {% endfor %}
+    </select>
+  </label>
+  <button type="submit" class="primary">Compare</button>
+</form>
+
+<table class="diff-table">
+  <thead>
+    <tr>
+      <th class="diff-head-a">OLD — {{ doc_a.filename }}</th>
+      <th class="diff-head-b">NEW — {{ doc_b.filename }}</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for kind, left, right in rows %}
+    {% if kind == "skip" %}
+    <tr class="diff-skip"><td colspan="2">{{ left }}</td></tr>
+    {% else %}
+    <tr class="diff-{{ kind }}">
+      <td class="diff-left">{{ left }}</td>
+      <td class="diff-right">{{ right }}</td>
+    </tr>
+    {% endif %}
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+{% endblock %}

@@ -389,6 +389,41 @@ mark { background: #ffe3d6; color: inherit; padding: 0 0.1em; }
 .protocol-add-phase { margin-top: 0.6rem; border: 1px dashed #d9d9db; padding: 0.35rem 0.6rem; }
 .protocol-add-phase form { display: grid; gap: 0.5rem; max-width: 26rem; border: none; padding: 0; margin-top: 0.4rem; }
 
+/* ---------- saved searches ---------- */
+
+.saved-searches { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; margin-bottom: 0.8rem; }
+.saved-chip {
+  display: inline-flex; align-items: center; gap: 0.3rem;
+  border: var(--hairline); padding: 0.15rem 0.3rem 0.15rem 0.6rem; font-size: 0.8rem;
+}
+.saved-chip a { font-weight: 600; }
+.saved-chip form { display: inline; }
+.saved-chip button { border: none; background: none; font-size: 0.7rem; padding: 0.1rem 0.25rem; }
+.saved-chip button:hover { color: var(--accent); }
+.save-search { display: flex; gap: 0.6rem; align-items: flex-end; margin: 0.6rem 0 1rem; max-width: 28rem; }
+.inline-form { display: inline; }
+
+/* ---------- diff view ---------- */
+
+.diff-pick { display: flex; gap: 0.8rem; align-items: flex-end; margin-bottom: 1rem; flex-wrap: wrap; }
+.diff-pick select { min-width: 18rem; }
+.diff-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; table-layout: fixed; }
+.diff-table th {
+  text-align: left; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em;
+  border-bottom: var(--hairline); padding: 0.4rem 0.6rem;
+}
+.diff-table td {
+  vertical-align: top; padding: 0.18rem 0.6rem;
+  border-bottom: 1px solid #ececee;
+  white-space: pre-wrap; word-break: break-word; font-family: var(--sans);
+}
+.diff-head-a, .diff-left { border-right: var(--hairline-soft); }
+.diff-added .diff-right, .diff-changed .diff-right { background: #fff2ea; }
+.diff-removed .diff-left, .diff-changed .diff-left { background: var(--neutral); }
+.diff-changed .diff-left { text-decoration: line-through; text-decoration-color: var(--accent); }
+.diff-removed .diff-left { color: var(--ink-soft); }
+.diff-skip td { text-align: center; color: var(--ink-soft); font-size: 0.72rem; background: var(--paper); }
+
 /* ---------- decisions & report ---------- */
 
 .decisions-table .ms-evidence { font-size: 0.8rem; color: var(--ink-soft); max-width: 26rem; }

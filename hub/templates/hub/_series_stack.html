@@ -2,6 +2,9 @@
   <div class="series-stack-head">
     <h3>{{ series.title }}</h3>
     <span class="hint">{{ stack|length }} revision{{ stack|length|pluralize }} — newest at the bottom</span>
+    {% if stack|length > 1 %}
+    <a class="linkish" href="{% url 'hub:series_diff' series.pk %}" target="_blank">compare revisions</a>
+    {% endif %}
     <button class="linkish"
             hx-post="{% url 'hub:series_delta' series.pk %}"
             hx-target="#series-stack" hx-swap="innerHTML">

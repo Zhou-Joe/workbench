@@ -11,6 +11,7 @@
     </p>
   </div>
   <div class="page-head-actions">
+    <a class="button" href="{% url 'hub:project_export' project.slug %}">Export project</a>
     <button hx-post="{% url 'hub:project_rescan' project.slug %}"
             hx-target="#ledger" hx-select="#ledger" hx-swap="outerHTML">Rescan folders</button>
   </div>

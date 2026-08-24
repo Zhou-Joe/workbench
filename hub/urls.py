@@ -16,6 +16,18 @@ urlpatterns = [
     ),
     path("project/<slug>/report/", views.project_report, name="project_report"),
     path("search/", views.search, name="search"),
+    path("search/save/", views.search_save, name="search_save"),
+    path(
+        "search/<int:saved_id>/delete/",
+        views.search_delete,
+        name="search_delete",
+    ),
+    path(
+        "project/<slug>/export/",
+        views.project_export,
+        name="project_export",
+    ),
+    path("series/<int:series_id>/diff/", views.series_diff, name="series_diff"),
     path("inbox/", views.inbox, name="inbox"),
     path("capture/", views.capture, name="capture"),
     path("capture/<int:capture_id>/file/", views.capture_file, name="capture_file"),

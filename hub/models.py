@@ -360,6 +360,21 @@ class Task(models.Model):
         )
 
 
+class SavedSearch(models.Model):
+    """A pinned query; the dashboard flags when new documents match it."""
+
+    name = models.CharField(max_length=200)
+    query = models.CharField(max_length=300)
+    last_count = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["name"]
+
+    def __str__(self):
+        return f"{self.name} ({self.query})"
+
+
 class Capture(models.Model):
     """Quick note dumped from anywhere — the LLM suggests where to file it."""
 

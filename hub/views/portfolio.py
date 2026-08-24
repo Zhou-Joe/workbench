@@ -68,10 +68,25 @@ def attention_context():
         .select_related("phase", "phase__project")
         .order_by("-ingested_at")[:10]
     )
+    from .search import match_count
+    from ..models import SavedSearch
+
+    search_alerts = []
+    for saved in SavedSearch.objects.all():
+        current = match_count(saved.query)
+        if current > saved.last_count:
+            search_alerts.append(
+                {
+                    "saved": saved,
+                    "new": current - saved.last_count,
+                    "total": current,
+                }
+            )
     return {
         "pending_review": pending_review,
         "open_items": open_items[:15],
         "unassigned": unassigned,
+        "search_alerts": search_alerts,
     }
 
 

@@ -13,8 +13,27 @@
   <button type="submit" class="primary">Search</button>
 </form>
 
+{% if saved_searches %}
+<div class="saved-searches">
+  <span class="hint">pinned:</span>
+  {% for s in saved_searches %}
+  <span class="saved-chip">
+    <a href="{% url 'hub:search' %}?q={{ s.query|urlencode }}&seen={{ s.pk }}">{{ s.name }}</a>
+    <form hx-post="{% url 'hub:search_delete' s.pk %}" hx-target="body" hx-select="main" hx-swap="outerHTML" class="inline-form">
+      <button type="submit" title="Remove saved search" aria-label="Remove {{ s.name }}">✕</button>
+    </form>
+  </span>
+  {% endfor %}
+</div>
+{% endif %}
+
 {% if performed %}
 <p class="hint">{{ total_shown }} result{{ total_shown|pluralize }} for “{{ q }}”{% if total_shown == 50 %} (showing first 50){% endif %}</p>
+<form class="save-search" hx-post="{% url 'hub:search_save' %}" hx-target="body" hx-select="main" hx-swap="outerHTML">
+  <input type="hidden" name="q" value="{{ q }}">
+  <input type="text" name="name" placeholder="name for this search (optional)">
+  <button type="submit">Pin this search</button>
+</form>
 {% endif %}
 
 {% if performed and results %}

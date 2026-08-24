@@ -47,6 +47,25 @@
   </div>
   {% endif %}
 
+  {% if search_alerts %}
+  <div class="panel">
+    <div class="section-head">
+      <h2>Saved-search alerts</h2>
+      <span class="hint">new documents matching your pinned queries</span>
+    </div>
+    <ul class="unassigned-mini">
+      {% for a in search_alerts %}
+      <li>
+        <strong>{{ a.saved.name }}</strong>
+        <span class="badge badge-warn">{{ a.new }} new</span>
+        <span class="dim num">{{ a.total }} total</span>
+        <a class="mini" href="{% url 'hub:search' %}?q={{ a.saved.query|urlencode }}&seen={{ a.saved.pk }}">view &amp; mark seen →</a>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
   {% if unassigned %}
   <div class="panel">
     <div class="section-head">
@@ -65,7 +84,7 @@
   </div>
   {% endif %}
 
-  {% if not pending_review and not open_items and not unassigned %}
+  {% if not pending_review and not open_items and not unassigned and not search_alerts %}
   <p class="empty">Nothing needs your attention. Drop files into project folders to keep the timeline building.</p>
   {% endif %}
 </section>

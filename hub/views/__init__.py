@@ -8,7 +8,7 @@ from .project import (
     project_report,
     project_rescan,
 )
-from .search import search
+from .search import search, search_delete, search_save
 from .phase import phase_close, phase_detail, phase_folder_new, phase_reopen
 from .upload import phase_upload
 from .docs import (
@@ -20,7 +20,9 @@ from .docs import (
 )
 from .ask import ask, ask_clear, ask_folder
 from .capture import capture, capture_file, capture_skip, inbox
+from .diff import series_diff
 from .download import download_file, download_folder, download_zip
+from .export import project_export
 from .jobs import job_retry, jobs
 from .palette import palette
 from .preview import preview
@@ -47,6 +49,10 @@ __all__ = [
     "project_decisions",
     "project_report",
     "search",
+    "search_save",
+    "search_delete",
+    "series_diff",
+    "project_export",
     "phase_add",
     "phase_rename",
     "phase_move",
