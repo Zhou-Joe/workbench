@@ -58,6 +58,24 @@ class ProjectViewTests(WorkspaceTestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, "Milestone ledger")
 
+    def test_phase_move_swaps_and_renumbers(self):
+        project = self.seed_project()
+        ph2 = project.phases.get(order=2)
+        resp = self.client.post(
+            reverse("hub:phase_move", args=[project.slug, ph2.pk]),
+            {"direction": "up"},
+            headers={"HX-Request": "true"},
+        )
+        self.assertEqual(resp.status_code, 200)
+        names = list(project.phases.values_list("name", flat=True))
+        self.assertEqual(names, ["Phase 2", "Phase 1", "Phase 3"])
+        folders = sorted(
+            p.name for p in (self.root / project.slug).iterdir() if p.is_dir()
+        )
+        self.assertEqual(
+            folders, ["01-phase-2", "02-phase-1", "03-phase-3"]
+        )
+
     def test_phase_add_between(self):
         project = self.seed_project()
         resp = self.client.post(

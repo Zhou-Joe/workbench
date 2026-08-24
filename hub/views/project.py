@@ -152,9 +152,18 @@ def phase_move(request, slug, phase_id):
     swap_with = idx - 1 if direction == "up" else idx + 1
     if 0 <= swap_with < len(phases):
         other = phases[swap_with]
-        phase.order, other.order = other.order, phase.order
+        # swap via a temp order slot — a direct swap would transiently
+        # violate the unique (project, order) constraint
+        from django.db.models import Max
+
+        temp = (project.phases.aggregate(m=Max("order"))["m"] or 0) + 1
+        old_phase, old_other = phase.order, other.order
+        phase.order = temp
+        phase.save(update_fields=["order"])  # frees old_phase
+        other.order = old_phase
+        other.save(update_fields=["order"])  # frees old_other
+        phase.order = old_other
         phase.save(update_fields=["order"])
-        other.save(update_fields=["order"])
         _renumber(project)
     bus.publish("phase", project_id=project.pk)
     return _hx_rail(request, project) or _redirect_project(project)
