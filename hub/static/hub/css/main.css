@@ -250,8 +250,11 @@ mark { background: #ffe3d6; color: inherit; padding: 0 0.1em; }
   .task-actions { opacity: 1; }
 }
 .task-actions button { font-size: 0.72rem; padding: 0.2rem 0.5rem; }
-.task-edit { border: none; padding: 0; display: flex; flex-direction: column; align-items: flex-start; }
-.task-edit[open] { flex-basis: 100%; order: 9; }
+.task-edit { border: none; padding: 0; display: contents; }
+.task-edit > form {
+  flex-basis: 100%;
+  order: 9;
+}
 .task-edit > summary {
   opacity: 0;
   display: inline-block;
