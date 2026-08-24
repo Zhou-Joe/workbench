@@ -67,15 +67,23 @@ class Project(models.Model):
         return self.name
 
     def current_phase(self):
-        """The latest phase that has any confirmed or extracted milestone."""
-        phases = self.phases.all()
+        """The phase the project is currently in. Explicit close-out wins:
+        the first phase after the last closed one. Falls back to the latest
+        phase with milestones, else the first phase."""
+        phases = list(self.phases.all())
         if not phases:
             return None
+        closed_orders = [p.order for p in phases if p.closed_at]
+        if closed_orders:
+            for phase in phases:
+                if phase.order > max(closed_orders):
+                    return phase
+            return phases[-1]
         best = None
         for phase in phases:
             if phase.milestones.exclude(status="dismissed").exists():
                 best = phase
-        return best or phases.first()
+        return best or phases[0]
 
 
 class Phase(models.Model):
@@ -86,6 +94,9 @@ class Phase(models.Model):
     slug = models.SlugField(max_length=200)
     order = models.PositiveSmallIntegerField()
     extraction_focus = models.TextField(blank=True)
+    closed_at = models.DateTimeField(
+        null=True, blank=True, help_text="Set when the phase is closed out"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

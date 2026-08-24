@@ -7,6 +7,7 @@ from django.utils.timezone import localtime
 from django.views.decorators.http import require_POST
 
 from .. import extract, revisions, workspace
+from ..events import bus
 from ..models import AppSettings, Document, Milestone, Phase
 
 # group order: PDF, office docs, email, CAD, images, everything else last
@@ -247,6 +248,9 @@ def phase_detail(request, project_slug, order):
         "phases": phases,
         "phase_tree": phase_tree,
         "folder_questions": folder_questions,
+        "pending_review_count": phase.milestones.filter(
+            status=Milestone.Status.EXTRACTED
+        ).count(),
         "current": current,
         "crumbs": crumbs,
         "folders": folders,
@@ -284,3 +288,25 @@ def phase_folder_new(request, project_slug, order):
     except RuntimeError as exc:
         return HttpResponseBadRequest(str(exc))
     return phase_detail(request, project_slug, order)
+
+
+@require_POST
+def phase_close(request, slug, phase_id):
+    """Close out a phase: marks it complete and advances the project's
+    active phase. Files stay; the phase can be reopened at any time."""
+    from django.utils import timezone
+
+    phase = get_object_or_404(Phase, project__slug=slug, pk=phase_id)
+    phase.closed_at = timezone.now()
+    phase.save(update_fields=["closed_at"])
+    bus.publish("phase", project_id=phase.project_id)
+    return phase_detail(request, slug, phase.order)
+
+
+@require_POST
+def phase_reopen(request, slug, phase_id):
+    phase = get_object_or_404(Phase, project__slug=slug, pk=phase_id)
+    phase.closed_at = None
+    phase.save(update_fields=["closed_at"])
+    bus.publish("phase", project_id=phase.project_id)
+    return phase_detail(request, slug, phase.order)

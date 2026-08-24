@@ -580,6 +580,11 @@ details form { margin-top: 0.8rem; display: grid; gap: 0.7rem; max-width: 26rem;
 }
 .phase-cell:last-child { border-right: none; }
 .phase-cell.is-here { background: var(--neutral); }
+.phase-cell-closed .numeral { color: var(--ink-soft); }
+.phase-cell-closed .phase-cell-name { color: var(--ink-soft); font-weight: 500; }
+.phase-status { display: flex; gap: 0.8rem; align-items: center; margin-bottom: 0.9rem; }
+.phase-nav-closed { opacity: 0.6; }
+.seg-active { border-color: var(--accent); }
 .phase-cell-main {
   display: flex;
   flex-direction: column;

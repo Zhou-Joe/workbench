@@ -12,8 +12,8 @@
     </div>
     <nav class="phase-side-nav">
       {% for ph in phases %}
-      <a class="{% if ph.pk == phase.pk %}here{% endif %}" href="{% url 'hub:phase' project.slug ph.order %}">
-        <span class="num">{{ ph.order|stringformat:"02d" }}</span> {{ ph.name }}
+      <a class="{% if ph.pk == phase.pk %}here{% endif %} {% if ph.closed_at %}phase-nav-closed{% endif %}" href="{% url 'hub:phase' project.slug ph.order %}">
+        <span class="num">{{ ph.order|stringformat:"02d" }}</span> {% if ph.closed_at %}✓ {% endif %}{{ ph.name }}
       </a>
       {% if ph.pk == phase.pk %}
       <div class="phase-tree-inline">
@@ -28,6 +28,20 @@
   {% endif %}
 
   <div class="phase-content">
+
+  <div class="phase-status">
+    {% if phase.closed_at %}
+    <span class="chip">closed {{ phase.closed_at|date:"Y-m-d" }}</span>
+    <button hx-post="{% url 'hub:phase_reopen' project.slug phase.pk %}"
+            hx-target="#phase-body" hx-select="#phase-body" hx-swap="outerHTML"
+            hx-confirm="Reopen “{{ phase.name }}”? It becomes an open phase again.">Reopen phase</button>
+    {% else %}
+    <button hx-post="{% url 'hub:phase_close' project.slug phase.pk %}"
+            hx-target="#phase-body" hx-select="#phase-body" hx-swap="outerHTML"
+            hx-confirm="Close out “{{ phase.name }}”? The project's active phase advances to the next open phase. Files stay in place and nothing is locked.{% if pending_review_count %} Note: {{ pending_review_count }} extracted milestone(s) here are still unreviewed.{% endif %}">Close out phase</button>
+    {% endif %}
+    <span class="hint">closing advances the project's active phase; files stay; reopen anytime</span>
+  </div>
 
   <nav class="crumbs">
     <a hx-get="{% url 'hub:phase' project.slug phase.order %}"

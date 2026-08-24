@@ -9,7 +9,7 @@ from .project import (
     project_rescan,
 )
 from .search import search
-from .phase import phase_detail, phase_folder_new
+from .phase import phase_close, phase_detail, phase_folder_new, phase_reopen
 from .upload import phase_upload
 from .docs import (
     assign_new_series,
@@ -53,6 +53,8 @@ __all__ = [
     "project_rescan",
     "phase_detail",
     "phase_folder_new",
+    "phase_close",
+    "phase_reopen",
     "phase_upload",
     "assign_new_series",
     "assign_predecessor",

@@ -88,6 +88,16 @@ urlpatterns = [
         name="phase_rename",
     ),
     path(
+        "project/<slug>/phase/<int:phase_id>/close/",
+        views.phase_close,
+        name="phase_close",
+    ),
+    path(
+        "project/<slug>/phase/<int:phase_id>/reopen/",
+        views.phase_reopen,
+        name="phase_reopen",
+    ),
+    path(
         "project/<slug>/phase/<int:phase_id>/move/",
         views.phase_move,
         name="phase_move",

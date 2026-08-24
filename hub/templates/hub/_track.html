@@ -11,7 +11,7 @@
     </span>
     <span class="track-phasebar" aria-hidden="true">
       {% for ph in phases %}
-        <span class="seg {% if current and ph.order <= current.order %}seg-done{% endif %}"></span>
+        <span class="seg {% if ph.closed_at or current and ph.order < current.order %}seg-done{% endif %}{% if current and ph.order == current.order and not ph.closed_at %} seg-active{% endif %}"></span>
       {% endfor %}
     </span>
   </a>

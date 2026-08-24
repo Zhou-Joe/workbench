@@ -6,17 +6,21 @@
      hx-trigger="rph:tick from:body, every 60s">
   <ol class="phase-rail">
     {% for ph in phases %}
-    <li class="phase-cell {% if phase and phase.pk == ph.pk %}is-here{% endif %}">
+    <li class="phase-cell {% if phase and phase.pk == ph.pk %}is-here{% endif %} {% if ph.closed_at %}phase-cell-closed{% endif %}">
       <a class="phase-cell-main" href="{% url 'hub:phase' project.slug ph.order %}">
         <span class="numeral">{{ ph.order|stringformat:"02d" }}</span>
-        <span class="phase-cell-name">{{ ph.name }}</span>
+        <span class="phase-cell-name">{% if ph.closed_at %}✓ {% endif %}{{ ph.name }}</span>
         <span class="phase-cell-counts">
           <span class="mini">{{ docs_by_phase|get_item:ph.pk }} doc{{ docs_by_phase|get_item:ph.pk|pluralize }}</span>
-          {% if unassigned_by_phase|get_item:ph.pk %}
-          <span class="mini mini-warn">{{ unassigned_by_phase|get_item:ph.pk }} unassigned</span>
-          {% endif %}
-          {% if pending_by_phase|get_item:ph.pk %}
-          <span class="mini mini-warn">{{ pending_by_phase|get_item:ph.pk }} to review</span>
+          {% if ph.closed_at %}
+          <span class="mini">closed {{ ph.closed_at|date:"m-d" }}</span>
+          {% else %}
+            {% if unassigned_by_phase|get_item:ph.pk %}
+            <span class="mini mini-warn">{{ unassigned_by_phase|get_item:ph.pk }} unassigned</span>
+            {% endif %}
+            {% if pending_by_phase|get_item:ph.pk %}
+            <span class="mini mini-warn">{{ pending_by_phase|get_item:ph.pk }} to review</span>
+            {% endif %}
           {% endif %}
         </span>
       </a>
