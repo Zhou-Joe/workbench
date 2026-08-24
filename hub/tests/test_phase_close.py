@@ -22,13 +22,12 @@ class PhaseCloseTests(WorkspaceTestCase):
         home = self.client.get(reverse("hub:home")).content.decode()
         self.assertIn("in 02 Phase 2", home)
 
-        # phase page shows closed state + reopen button
+        # phase page sidebar shows closed state + reopen action
         page = self.client.get(reverse("hub:phase", args=[project.slug, 1]))
         html = page.content.decode()
-        self.assertIn("Reopen phase", html)
-        self.assertIn("closed", html)
-        # rail marks it closed
+        self.assertIn("/phase/1/reopen/", html)  # reopen button in sidebar
         self.assertIn("✓", html)
+        self.assertIn('title="Reopen ', html)
 
         # closing the last phase keeps the last phase active
         for order in (2, 3):

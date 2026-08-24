@@ -582,8 +582,44 @@ details form { margin-top: 0.8rem; display: grid; gap: 0.7rem; max-width: 26rem;
 .phase-cell.is-here { background: var(--neutral); }
 .phase-cell-closed .numeral { color: var(--ink-soft); }
 .phase-cell-closed .phase-cell-name { color: var(--ink-soft); font-weight: 500; }
-.phase-status { display: flex; gap: 0.8rem; align-items: center; margin-bottom: 0.9rem; }
-.phase-nav-closed { opacity: 0.6; }
+.phase-nav-row {
+  display: flex;
+  align-items: center;
+  border-bottom: var(--hairline-soft);
+}
+.phase-nav-row > a {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.78rem;
+  padding: 0.32rem 0.2rem;
+  color: var(--ink-soft);
+  display: flex;
+  gap: 0.5rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.phase-nav-row > a .num { color: var(--ink); font-weight: 700; }
+.phase-nav-row > a.here {
+  color: var(--ink);
+  font-weight: 600;
+  border-left: 3px solid var(--accent);
+  padding-left: 0.5rem;
+}
+.phase-nav-closed { opacity: 0.75; }
+.phase-nav-act {
+  border: none;
+  background: none;
+  font-size: 0.8rem;
+  padding: 0.15rem 0.35rem;
+  color: var(--ink-soft);
+  opacity: 0;
+  transition: opacity 120ms linear;
+}
+.phase-nav-row:hover .phase-nav-act,
+.phase-nav-act:focus { opacity: 1; }
+.phase-nav-act:hover { color: var(--accent); }
+@media (hover: none) { .phase-nav-act { opacity: 1; } }
 .seg-active { border-color: var(--accent); }
 .phase-cell-main {
   display: flex;
