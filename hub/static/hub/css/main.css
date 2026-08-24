@@ -251,6 +251,28 @@ mark { background: #ffe3d6; color: inherit; padding: 0 0.1em; }
 }
 .task-actions button { font-size: 0.72rem; padding: 0.2rem 0.5rem; }
 .task-edit { margin-top: 0.3rem; border: none; padding: 0; }
+.task-edit > summary {
+  opacity: 0;
+  display: inline-block;
+  width: auto;
+  font-size: 0.72rem;
+  padding: 0.2rem 0.5rem;
+  border: var(--hairline);
+  background: var(--paper);
+  color: var(--ink);
+  cursor: pointer;
+  list-style: none;
+  transition: opacity 120ms linear;
+}
+.task-edit > summary::-webkit-details-marker { display: none; }
+.task-edit > summary::before { content: ""; }
+.task-edit > summary:hover { background: var(--ink); color: var(--paper); }
+.taskcard:hover .task-edit > summary,
+.taskcard:focus-within .task-edit > summary,
+.task-edit[open] > summary { opacity: 1; }
+@media (hover: none) {
+  .task-edit > summary { opacity: 1; }
+}
 .task-edit form { display: grid; gap: 0.5rem; max-width: 24rem; border: none; padding: 0; margin-top: 0.4rem; }
 .task-add { border: 1px dashed var(--hairline-soft); padding: 0.35rem 0.5rem; border: 1px dashed #d9d9db; }
 .task-add form { display: grid; gap: 0.5rem; border: none; padding: 0; margin-top: 0.4rem; max-width: none; }
