@@ -216,19 +216,29 @@ mark { background: #ffe3d6; color: inherit; padding: 0 0.1em; }
 
 .taskboard { margin-bottom: 2rem; }
 .taskcols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
-.taskcol { border: var(--hairline); padding: 0.6rem 0.7rem; display: flex; flex-direction: column; gap: 0.55rem; min-height: 6rem; }
+.taskcol { border: var(--hairline); padding: 0.6rem 0.7rem; display: flex; flex-direction: column; gap: 0.55rem; min-height: 6rem; background: var(--paper); }
 .taskcol h3 {
   font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.09em;
   border-bottom: var(--hairline-soft); padding-bottom: 0.35rem;
 }
-.taskcol-current h3 { color: var(--accent); }
-.taskcard { border: var(--hairline-soft); padding: 0.5rem 0.6rem; background: var(--paper); }
-.taskcard.task-overdue { border-color: var(--accent); }
+.taskcol-planned { background: var(--neutral); border-color: #d9d9db; }
+.taskcol-planned h3 { color: var(--ink-soft); }
+.taskcol-current { background: #fff7f2; border-color: var(--accent); }
+.taskcol-current h3 { color: var(--accent); border-bottom-color: var(--accent); }
+.taskcol-done h3 { color: var(--ink); border-bottom: 2px solid var(--ink); }
+.taskcard { border: var(--hairline-soft); border-left: 3px solid #b9b9bd; padding: 0.5rem 0.6rem; background: var(--paper); }
+.taskcard.status-current { border-left-color: var(--accent); }
+.taskcard.status-done { border-left-color: var(--ink); }
+.taskcard.status-done .task-title { color: var(--ink-soft); }
+.taskcard.task-overdue { border-color: var(--accent); border-left-color: var(--accent); }
 .task-title { font-size: 0.86rem; font-weight: 600; }
 .task-dates { font-size: 0.75rem; color: var(--ink-soft); display: flex; gap: 0.45rem; align-items: center; flex-wrap: wrap; }
 .task-notes { font-size: 0.78rem; color: var(--ink-soft); }
-.tprog { display: inline-block; width: 4.5rem; height: 6px; border: var(--hairline-soft); position: relative; }
+.tprog { display: inline-block; width: 4.5rem; height: 6px; border: var(--hairline-soft); position: relative; background: var(--neutral); }
 .tprog-fill { position: absolute; inset: 0 auto 0 0; background: var(--ink); }
+.taskcard.status-planned .tprog-fill { background: #b9b9bd; }
+.taskcard.status-current .tprog-fill { background: var(--accent); }
+.taskcard.status-done .tprog-fill { background: var(--ink); }
 .tprog-fill.tprog-overdue { background: var(--accent); }
 .task-actions { display: flex; gap: 0.35rem; flex-wrap: wrap; margin-top: 0.35rem; }
 .task-actions button { font-size: 0.72rem; padding: 0.2rem 0.5rem; }
