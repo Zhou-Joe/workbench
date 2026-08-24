@@ -1,4 +1,8 @@
-"""Dependency-aware Gantt timeline (server-rendered SVG) + .ics calendar."""
+"""Dependency-aware Gantt timeline (server-rendered SVG) + .ics calendar.
+
+Tasks (user work items) render as bars, milestones (extracted events) as
+dots with dependency arrows; both share one date scale. A dashed line marks
+today when it falls inside the range."""
 
 from datetime import date, timedelta
 
@@ -24,40 +28,72 @@ def project_timeline(request, slug):
         .prefetch_related("depends_on")
         .order_by("date", "pk")
     )
+    tasks = list(project.tasks.order_by("start_date", "pk"))
 
-    rows = []
-    index_by_pk = {}
-    dated = [m for m in milestones if m.date]
+    dated = [m.date for m in milestones if m.date]
+    dated += [t.start_date for t in tasks if t.start_date]
+    dated += [t.end_date for t in tasks if t.end_date]
+    today = date.today()
+
+    task_rows = []
+    milestone_rows = []
+    arrows = []
+    axis = []
+    today_x = None
+    y = TOP_PAD
+
     if dated:
-        d_min = min(m.date for m in dated)
-        d_max = max(m.date for m in dated)
+        d_min, d_max = min(dated), max(dated)
         span = max((d_max - d_min).days, 1)
 
-        def x_of(date):
-            if date is None:
+        def x_of(d):
+            if d is None:
                 return None
-            frac = (date - d_min).days / span
-            return LABEL_WIDTH + frac * (CHART_WIDTH - 24) + 12
+            return LABEL_WIDTH + ((d - d_min).days / span) * (CHART_WIDTH - 24) + 12
 
-        for i, m in enumerate(milestones):
-            index_by_pk[m.pk] = i
-        for i, m in enumerate(milestones):
-            rows.append(
+        for t in tasks:
+            x1, x2 = x_of(t.start_date), x_of(t.end_date)
+            if x1 is None and x2 is None:
+                continue  # undated tasks stay on the board only
+            if x1 is None:
+                x1 = x2
+            if x2 is None:
+                x2 = x1
+            bar_x1, bar_x2 = x1, max(x2, x1 + 6)
+            task_rows.append(
+                {
+                    "t": t,
+                    "y": y + ROW_HEIGHT // 2,
+                    "x1": bar_x1,
+                    "x2": bar_x2,
+                    "w": bar_x2 - bar_x1,
+                }
+            )
+            y += ROW_HEIGHT
+
+        separator_y = y + 4 if task_rows else None
+        y = y + (12 if task_rows else 0)
+
+        index_by_pk = {}
+        for m in milestones:
+            index_by_pk[m.pk] = len(milestone_rows)
+            milestone_rows.append(
                 {
                     "m": m,
-                    "y": TOP_PAD + i * ROW_HEIGHT + ROW_HEIGHT // 2,
+                    "y": y + ROW_HEIGHT // 2,
                     "x": x_of(m.date),
                     "blocked": m.is_blocked,
                     "deps": list(m.depends_on.all()),
                 }
             )
-        arrows = []
-        for row in rows:
+            y += ROW_HEIGHT
+
+        for row in milestone_rows:
             for dep in row["deps"]:
                 j = index_by_pk.get(dep.pk)
                 if j is None:
                     continue
-                dep_row = rows[j]
+                dep_row = milestone_rows[j]
                 arrows.append(
                     {
                         "x1": dep_row["x"] if dep_row["x"] is not None else LABEL_WIDTH + 12,
@@ -66,28 +102,27 @@ def project_timeline(request, slug):
                         "y2": row["y"],
                     }
                 )
-        chart_height = TOP_PAD + len(rows) * ROW_HEIGHT + BOTTOM_PAD
+        if d_min <= today <= d_max:
+            today_x = x_of(today)
         axis = [
             {"x": x_of(d_min), "label": d_min.strftime("%Y-%m-%d")},
             {"x": x_of(d_max), "label": d_max.strftime("%Y-%m-%d")},
         ]
-    else:
-        d_min = d_max = None
-        arrows = []
-        axis = []
-        chart_height = TOP_PAD + BOTTOM_PAD
 
+    chart_height = max(y + BOTTOM_PAD, TOP_PAD + BOTTOM_PAD)
     return render(
         request,
         "hub/timeline.html",
         {
             "project": project,
-            "rows": rows,
+            "task_rows": task_rows,
+            "rows": milestone_rows,
             "arrows": arrows,
             "axis": axis,
+            "today_x": today_x,
             "chart_height": chart_height,
             "chart_width": LABEL_WIDTH + CHART_WIDTH,
-            "blocked_count": sum(1 for r in rows if r["blocked"]),
+            "blocked_count": sum(1 for r in milestone_rows if r["blocked"]),
         },
     )
 

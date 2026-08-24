@@ -1,0 +1,29 @@
+{% load rph_extras %}
+<section class="taskboard" id="taskboard"
+         hx-get="{% url 'hub:task_panel' project.slug %}"
+         hx-select="#taskboard"
+         hx-swap="outerHTML"
+         hx-trigger="rph:tick from:body, every 60s">
+  <div class="section-head">
+    <h2>Tasks</h2>
+    <span class="hint">your own work items — planned / in progress / done. Dated tasks appear on the
+      <a href="{% url 'hub:project_timeline' project.slug %}">Timeline</a> gantt automatically.</span>
+  </div>
+
+  <div class="taskcols">
+    <div class="taskcol taskcol-planned">
+      <h3>Planned <span class="mini num">{{ planned|length }}</span></h3>
+      {% for t in planned %}{% include "hub/_task_card.html" %}{% endfor %}
+      {% include "hub/_task_add.html" with status_value="planned" %}
+    </div>
+    <div class="taskcol taskcol-current">
+      <h3>In progress <span class="mini num">{{ current|length }}</span></h3>
+      {% for t in current %}{% include "hub/_task_card.html" %}{% endfor %}
+      {% include "hub/_task_add.html" with status_value="current" %}
+    </div>
+    <div class="taskcol taskcol-done">
+      <h3>Done <span class="mini num">{{ done|length }}</span></h3>
+      {% for t in done %}{% include "hub/_task_card.html" %}{% endfor %}
+    </div>
+  </div>
+</section>

@@ -1,0 +1,48 @@
+<article class="taskcard status-{{ t.status }} {% if t.overdue %}task-overdue{% endif %}">
+  <div class="taskcard-head">
+    <span class="task-title">{{ t.title }}</span>
+  </div>
+  {% if t.start_date or t.end_date %}
+  <div class="task-dates num">
+    {{ t.start_date|date:"m-d"|default:"—" }} → {{ t.end_date|date:"m-d"|default:"?" }}
+    {% if t.percent is not None %}
+    <span class="tprog"><span class="tprog-fill {% if t.overdue %}tprog-overdue{% endif %}" style="width: {{ t.percent }}%"></span></span>
+    <span class="mini num">{{ t.percent }}%</span>
+    {% endif %}
+    {% if t.overdue %}<span class="badge badge-over">overdue</span>{% endif %}
+  </div>
+  {% endif %}
+  {% if t.notes %}<p class="task-notes">{{ t.notes }}</p>{% endif %}
+
+  <div class="task-actions">
+    {% if t.status != "current" %}
+    <button hx-post="{% url 'hub:task_status' t.pk %}" hx-vals='{"status": "current"}'
+            hx-target="#taskboard" hx-select="#taskboard" hx-swap="outerHTML"
+            hx-confirm="Start working on “{{ t.title }}”?">Start</button>
+    {% endif %}
+    {% if t.status != "done" %}
+    <button class="primary" hx-post="{% url 'hub:task_status' t.pk %}" hx-vals='{"status": "done"}'
+            hx-target="#taskboard" hx-select="#taskboard" hx-swap="outerHTML"
+            hx-confirm="Mark “{{ t.title }}” as done?">Done</button>
+    {% endif %}
+    {% if t.status != "planned" %}
+    <button hx-post="{% url 'hub:task_status' t.pk %}" hx-vals='{"status": "planned"}'
+            hx-target="#taskboard" hx-select="#taskboard" hx-swap="outerHTML">Re-plan</button>
+    {% endif %}
+    <button hx-post="{% url 'hub:task_delete' t.pk %}"
+            hx-target="#taskboard" hx-select="#taskboard" hx-swap="outerHTML"
+            hx-confirm="Delete task “{{ t.title }}”? This cannot be undone.">Delete</button>
+  </div>
+
+  <details class="task-edit">
+    <summary>Edit</summary>
+    <form hx-post="{% url 'hub:task_edit' t.pk %}"
+          hx-target="#taskboard" hx-select="#taskboard" hx-swap="outerHTML">
+      <label>Title <input type="text" name="title" value="{{ t.title }}" required></label>
+      <label>Start <input type="date" name="start_date" value="{{ t.start_date|date:'Y-m-d' }}"></label>
+      <label>End <input type="date" name="end_date" value="{{ t.end_date|date:'Y-m-d' }}"></label>
+      <label>Notes <input type="text" name="notes" value="{{ t.notes }}"></label>
+      <button type="submit">Save</button>
+    </form>
+  </details>
+</article>

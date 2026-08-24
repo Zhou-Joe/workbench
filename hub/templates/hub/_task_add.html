@@ -1,0 +1,15 @@
+<details class="task-add">
+  <summary>+ Add task</summary>
+  <form hx-post="{% url 'hub:task_new' project.slug %}"
+        hx-target="#taskboard" hx-select="#taskboard" hx-swap="outerHTML"
+        hx-on::after-request="if(event.detail.successful) this.reset()">
+    <input type="hidden" name="status" value="{{ status_value }}">
+    <label>Title <input type="text" name="title" required placeholder="e.g. Close out vendor weld report"></label>
+    <div class="task-add-row">
+      <label>Start <input type="date" name="start_date"></label>
+      <label>End <input type="date" name="end_date"></label>
+    </div>
+    <label>Notes <input type="text" name="notes" placeholder="optional"></label>
+    <button type="submit" class="primary">Add</button>
+  </form>
+</details>

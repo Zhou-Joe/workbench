@@ -63,6 +63,9 @@ def _ledger_context(request, project, notice=""):
 def project_detail(request, slug):
     project = get_object_or_404(Project, slug=slug)
     context = _ledger_context(request, project)
+    from .tasks import tasks_context
+
+    context.update(tasks_context(project))
     if request.headers.get("HX-Request"):
         return render(request, "hub/_ledger.html", context)
     return render(request, "hub/project.html", context)

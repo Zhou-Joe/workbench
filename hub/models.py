@@ -240,6 +240,62 @@ class PhaseDigest(models.Model):
         return f"digest: {self.phase}"
 
 
+class Task(models.Model):
+    """User-authored work item (planned → current → done), distinct from
+    extracted Milestones: tasks are what you intend to do."""
+
+    class Status(models.TextChoices):
+        PLANNED = "planned"
+        CURRENT = "current"
+        DONE = "done"
+
+    project = models.ForeignKey(
+        Project, on_delete=models.CASCADE, related_name="tasks"
+    )
+    title = models.CharField(max_length=300)
+    notes = models.TextField(blank=True)
+    status = models.CharField(
+        max_length=8, choices=Status, default=Status.PLANNED
+    )
+    start_date = models.DateField(null=True, blank=True)
+    end_date = models.DateField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["end_date", "pk"]
+
+    def __str__(self):
+        return self.title
+
+    @property
+    def percent(self):
+        """Time progress through the task window (100 when done)."""
+        from datetime import date as _date
+
+        today = _date.today()
+        if self.status == self.Status.DONE:
+            return 100
+        if not self.start_date or not self.end_date:
+            return None
+        if self.start_date >= self.end_date:
+            return 100 if today >= self.end_date else 0
+        span = (self.end_date - self.start_date).days
+        elapsed = (today - self.start_date).days
+        return max(0, min(100, round(elapsed / span * 100)))
+
+    @property
+    def overdue(self):
+        from datetime import date as _date
+
+        return (
+            self.status != self.Status.DONE
+            and bool(self.end_date)
+            and _date.today() > self.end_date
+        )
+
+
 class Capture(models.Model):
     """Quick note dumped from anywhere — the LLM suggests where to file it."""
 

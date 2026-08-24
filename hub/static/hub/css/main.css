@@ -200,7 +200,45 @@ mark { background: #ffe3d6; color: inherit; padding: 0 0.1em; }
 .gdot-issue, .gdot-risk, .gdot-action { fill: var(--accent); }
 .gdot-blocked { fill: var(--paper); stroke: var(--accent); stroke-width: 3; }
 .garrow { fill: none; stroke: var(--ink); stroke-width: 1.2; }
-.gantt-legend { display: flex; gap: 1rem; align-items: center; font-size: 0.75rem; color: var(--ink-soft); margin-top: 0.6rem; }
+.gtask { stroke: var(--ink); stroke-width: 1; }
+.gtask-done { fill: var(--ink); }
+.gtask-current { fill: var(--accent); }
+.gtask-planned { fill: var(--paper); stroke-dasharray: 3 2; }
+.glabel-task { fill: var(--ink-soft); }
+.gtoday { stroke: var(--accent); stroke-width: 1; stroke-dasharray: 4 3; }
+.gtoday-label { font-size: 10px; fill: var(--accent); font-weight: 700; font-family: var(--sans); }
+.gtask-legend { display: inline-block; width: 18px; height: 9px; border: 1px solid var(--ink); }
+.gtask-legend.gtask-current, svg .gtask-current { background: var(--accent); }
+.gtask-legend.gtask-done { background: var(--ink); }
+.gtask-legend.gtask-planned { background: var(--paper); border-style: dashed; }
+
+/* ---------- task board ---------- */
+
+.taskboard { margin-bottom: 2rem; }
+.taskcols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+.taskcol { border: var(--hairline); padding: 0.6rem 0.7rem; display: flex; flex-direction: column; gap: 0.55rem; min-height: 6rem; }
+.taskcol h3 {
+  font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.09em;
+  border-bottom: var(--hairline-soft); padding-bottom: 0.35rem;
+}
+.taskcol-current h3 { color: var(--accent); }
+.taskcard { border: var(--hairline-soft); padding: 0.5rem 0.6rem; background: var(--paper); }
+.taskcard.task-overdue { border-color: var(--accent); }
+.task-title { font-size: 0.86rem; font-weight: 600; }
+.task-dates { font-size: 0.75rem; color: var(--ink-soft); display: flex; gap: 0.45rem; align-items: center; flex-wrap: wrap; }
+.task-notes { font-size: 0.78rem; color: var(--ink-soft); }
+.tprog { display: inline-block; width: 4.5rem; height: 6px; border: var(--hairline-soft); position: relative; }
+.tprog-fill { position: absolute; inset: 0 auto 0 0; background: var(--ink); }
+.tprog-fill.tprog-overdue { background: var(--accent); }
+.task-actions { display: flex; gap: 0.35rem; flex-wrap: wrap; margin-top: 0.35rem; }
+.task-actions button { font-size: 0.72rem; padding: 0.2rem 0.5rem; }
+.task-edit { margin-top: 0.3rem; border: none; padding: 0; }
+.task-edit form { display: grid; gap: 0.5rem; max-width: 24rem; border: none; padding: 0; margin-top: 0.4rem; }
+.task-add { border: 1px dashed var(--hairline-soft); padding: 0.35rem 0.5rem; border: 1px dashed #d9d9db; }
+.task-add form { display: grid; gap: 0.5rem; border: none; padding: 0; margin-top: 0.4rem; max-width: none; }
+.task-add-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+
+.gantt-legend { display: flex; gap: 1rem; align-items: center; font-size: 0.75rem; color: var(--ink-soft); margin-top: 0.6rem; flex-wrap: wrap; }
 .gantt-legend .gdot { display: inline-block; width: 10px; height: 10px; border-radius: 0; }
 
 .depchip {

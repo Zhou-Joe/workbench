@@ -31,6 +31,15 @@ urlpatterns = [
         views.project_timeline,
         name="project_timeline",
     ),
+    path(
+        "project/<slug>/tasks/",
+        views.task_panel,
+        name="task_panel",
+    ),
+    path("project/<slug>/tasks/new/", views.task_new, name="task_new"),
+    path("task/<int:task_id>/status/", views.task_status, name="task_status"),
+    path("task/<int:task_id>/edit/", views.task_edit, name="task_edit"),
+    path("task/<int:task_id>/delete/", views.task_delete, name="task_delete"),
     path("ask/", views.ask, name="ask"),
     path("ask/clear/", views.ask_clear, name="ask_clear"),
     path(

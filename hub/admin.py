@@ -12,6 +12,7 @@ from .models import (
     Project,
     Question,
     Tag,
+    Task,
     WeeklyReport,
 )
 
@@ -74,6 +75,12 @@ class ExtractionJobAdmin(admin.ModelAdmin):
 @admin.register(ArchiveMove)
 class ArchiveMoveAdmin(admin.ModelAdmin):
     list_display = ("document", "from_path", "to_path", "moved_at", "undone")
+
+
+@admin.register(Task)
+class TaskAdmin(admin.ModelAdmin):
+    list_display = ("title", "project", "status", "start_date", "end_date", "completed_at")
+    list_filter = ("status", "project")
 
 
 @admin.register(Tag)

@@ -7,8 +7,9 @@
       <a href="{% url 'hub:project' project.slug %}">{{ project.name }}</a> / Timeline</p>
     <h1>Dependency timeline</h1>
     <p class="hint">
-      {% if blocked_count %}{{ blocked_count }} milestone{{ blocked_count|pluralize }} blocked by unconfirmed dependencies (orange).{% else %}No blocked milestones.{% endif %}
-      Edit dependencies on any milestone in the ledger.
+      Tasks as bars (done filled, in progress orange, planned outlined) · milestones as dots with dependency arrows.
+      {% if blocked_count %} {{ blocked_count }} milestone{{ blocked_count|pluralize }} blocked (orange).{% endif %}
+      Dashed line = today.
     </p>
   </div>
   <div class="page-head-actions">
@@ -18,7 +19,7 @@
 
 {% include "hub/_project_tabs.html" with active_tab="timeline" %}
 
-{% if rows %}
+{% if task_rows or rows %}
 <svg class="gantt" viewBox="0 0 {{ chart_width }} {{ chart_height }}" width="100%" role="img" aria-label="milestone timeline">
   <defs>
     <marker id="arrowhead" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
@@ -28,6 +29,14 @@
   {% for a in axis %}
   <line x1="{{ a.x }}" y1="16" x2="{{ a.x }}" y2="{{ chart_height }}" class="gaxis"/>
   <text x="{{ a.x }}" y="12" text-anchor="middle" class="gaxis-label">{{ a.label }}</text>
+  {% endfor %}
+  {% if today_x %}
+  <line x1="{{ today_x }}" y1="16" x2="{{ today_x }}" y2="{{ chart_height }}" class="gtoday"/>
+  <text x="{{ today_x }}" y="12" text-anchor="middle" class="gtoday-label">today</text>
+  {% endif %}
+  {% for r in task_rows %}
+  <text x="8" y="{{ r.y|add:4 }}" class="glabel glabel-task">{{ r.t.title|truncatechars:40 }}</text>
+  <rect x="{{ r.x1 }}" y="{{ r.y|add:'-7' }}" width="{{ r.w }}" height="14" class="gtask gtask-{{ r.t.status }}"/>
   {% endfor %}
   {% for r in rows %}
   <text x="8" y="{{ r.y|add:4 }}" class="glabel {% if r.blocked %}glabel-blocked{% endif %}">
@@ -43,6 +52,9 @@
 </svg>
 
 <div class="gantt-legend">
+  <span class="gtask-legend gtask-done"></span> task done
+  <span class="gtask-legend gtask-current"></span> in progress
+  <span class="gtask-legend gtask-planned"></span> planned
   <span class="gdot gdot-gate"></span> gate
   <span class="gdot gdot-decision"></span> decision
   <span class="gdot gdot-deliverable"></span> deliverable
@@ -50,6 +62,6 @@
   <span class="gdot gdot-blocked"></span> blocked
 </div>
 {% else %}
-<p class="empty">No dated milestones yet — they appear once documents are extracted and confirmed.</p>
+<p class="empty">No dated tasks or milestones yet — add tasks on the project page; milestones appear once documents are extracted and confirmed.</p>
 {% endif %}
 {% endblock %}

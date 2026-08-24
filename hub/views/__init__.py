@@ -24,6 +24,7 @@ from .download import download_file, download_folder, download_zip
 from .jobs import job_retry, jobs
 from .palette import palette
 from .preview import preview
+from .tasks import task_delete, task_edit, task_new, task_panel, task_status
 from .timeline import project_calendar, project_timeline
 from .milestones import milestone_action, milestone_edit
 from .settings_view import lm_status, settings_view
@@ -64,6 +65,11 @@ __all__ = [
     "palette",
     "project_calendar",
     "project_timeline",
+    "task_panel",
+    "task_new",
+    "task_status",
+    "task_edit",
+    "task_delete",
     "jobs",
     "job_retry",
     "settings_view",
