@@ -108,3 +108,16 @@ class TaskBoardTests(WorkspaceTestCase):
         self.assertIn('class="gtask gtask-current"', html)
         self.assertIn("Install track", html)
         self.assertIn("gtoday", html)  # today falls inside the range
+        # gantt is a live region (auto-refresh after task edits)
+        self.assertIn('id="gantt-region"', html)
+        self.assertIn("hx-get=", html)
+
+    def test_task_actions_carry_refresh_trigger(self):
+        project = self.seed_project()
+        task = Task.objects.create(project=project, title="T")
+        resp = self.client.post(
+            reverse("hub:task_status", args=[task.pk]),
+            {"status": "done"},
+            headers={"HX-Request": "true"},
+        )
+        self.assertEqual(resp["HX-Trigger"], "rph:tick")

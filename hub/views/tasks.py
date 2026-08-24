@@ -20,7 +20,10 @@ def tasks_context(project):
 
 
 def _panel(request, project):
-    return render(request, "hub/_tasks_panel.html", tasks_context(project))
+    response = render(request, "hub/_tasks_panel.html", tasks_context(project))
+    # the board is swapped directly; the gantt region below refreshes too
+    response["HX-Trigger"] = "rph:tick"
+    return response
 
 
 def task_panel(request, slug):
