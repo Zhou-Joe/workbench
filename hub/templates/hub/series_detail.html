@@ -19,7 +19,7 @@
   </div>
 </div>
 
-<div id="series-page"
+<div id="series-page" data-series-id="{{ series.pk }}"
      hx-get="{% url 'hub:series_detail' series.pk %}"
      hx-select="#series-page"
      hx-swap="outerHTML"

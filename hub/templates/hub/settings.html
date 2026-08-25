@@ -32,6 +32,21 @@
     </div>
 
     <div class="section-head">
+      <h2>Meetings — ASR backend</h2>
+      <span class="hint">funasr_cpu loads SenseVoice-Small + FSMN-VAD (~1.5 GB) from ModelScope on
+      first use, then stays in memory; CPU only. stub needs no models and emits a canned
+      bilingual transcript for testing.</span>
+    </div>
+    <div class="form-grid">
+      <label>ASR backend
+        <select name="asr_backend">
+          <option value="funasr_cpu" {% if settings.asr_backend == "funasr_cpu" %}selected{% endif %}>funasr_cpu — SenseVoice (real)</option>
+          <option value="stub" {% if settings.asr_backend == "stub" %}selected{% endif %}>stub — canned transcript (no models)</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="section-head">
       <h2>LLM — LM Studio</h2>
       <span class="hint">Start LM Studio's local server (Developer tab → Start Server), load a model, and set it here.</span>
     </div>

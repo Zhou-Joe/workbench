@@ -1071,3 +1071,202 @@ details form { margin-top: 0.8rem; display: grid; gap: 0.7rem; max-width: 26rem;
   .track-main { border-right: none; border-bottom: var(--hairline-soft); }
   .settings-grid { grid-template-columns: 1fr; }
 }
+
+/* ------------------------------------------------------------------ */
+/* Meetings                                                            */
+/* ------------------------------------------------------------------ */
+
+.meetings-head-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.meetings-series-panel {
+  margin-bottom: 16px;
+}
+
+.meetings-series-name {
+  font-weight: 700;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  border-bottom: 1px solid #111;
+  padding-bottom: 6px;
+  margin-bottom: 4px;
+}
+
+.meetings-series-name a { color: inherit; text-decoration: none; }
+.meetings-series-name a:hover { color: #FF4F00; }
+
+.meetings-list { display: block; }
+
+.meeting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid #eee;
+  padding: 6px 0;
+}
+
+.meeting-row:last-child { border-bottom: 0; }
+
+.meeting-main {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  flex-wrap: wrap;
+  color: inherit;
+  text-decoration: none;
+  min-width: 0;
+}
+
+.meeting-main:hover .meeting-title { color: #FF4F00; }
+.meeting-title { font-weight: 500; }
+
+.chip-ok { color: #0A7B5F; }
+
+/* live session */
+.live-panel { max-width: 860px; }
+
+.live-start {
+  display: flex;
+  gap: 12px;
+  align-items: end;
+  flex-wrap: wrap;
+}
+
+.live-start label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.live-start input[type="text"], .live-start select { min-width: 260px; }
+
+.live-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  border-bottom: 1px solid #111;
+  padding-bottom: 10px;
+  margin-bottom: 12px;
+}
+
+.live-toggle { border: 1px solid #111; background: #fff; color: #111; }
+.live-toggle.on { background: #111; color: #fff; }
+.live-stop { border: 1px solid #FF4F00; background: #FF4F00; color: #fff; }
+
+.level-meter {
+  width: 120px;
+  height: 8px;
+  border: 1px solid #111;
+  background: #fff;
+  overflow: hidden;
+}
+
+.level-fill {
+  height: 100%;
+  width: 0%;
+  background: #111;
+  transition: width 80ms linear;
+}
+
+.live-transcript {
+  max-height: 52vh;
+  overflow-y: auto;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.live-partial { color: #999; }
+
+.live-final { margin: 6px 0; }
+
+.live-translation {
+  margin: 2px 0 4px 1.5rem;
+  color: #666;
+  border-left: 2px solid #ddd;
+  padding-left: 10px;
+}
+
+/* transcript rows */
+.transcript { display: block; }
+
+.utt-row { border-bottom: 1px solid #eee; padding: 6px 0; }
+.utt-row:last-child { border-bottom: 0; }
+.utt-row:hover .utt-edit summary { opacity: 1; }
+
+.utt-edit summary {
+  opacity: 0;
+  cursor: pointer;
+  list-style: none;
+  font-size: 11px;
+  color: #FF4F00;
+}
+
+.utt-edit summary:hover { text-decoration: underline; }
+
+.utt-edit[open] summary { opacity: 1; }
+
+.utt-edit form {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 6px 0;
+}
+
+.utt-edit-text { flex: 1; min-width: 240px; }
+
+.utt-main { display: block; padding-left: 0; }
+
+.utt-speaker {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border: 1px solid #111;
+  padding: 1px 6px;
+  margin-right: 8px;
+}
+
+.utt-time { font-size: 11px; margin-right: 8px; }
+.utt-text { font-size: 15px; }
+
+.utt-translation {
+  margin: 2px 0 0 0;
+  padding-left: 12px;
+  border-left: 2px solid #ddd;
+  font-size: 14px;
+}
+
+.meeting-audio { width: 100%; max-width: 560px; display: block; margin-bottom: 10px; }
+
+.export-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* speakers */
+.speakers-list { display: grid; gap: 12px; }
+
+.speaker-card {
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.speaker-name { font-weight: 600; display: flex; gap: 8px; align-items: center; }
+
+.speaker-dot {
+  width: 10px;
+  height: 10px;
+  display: inline-block;
+  border: 1px solid #111;
+}

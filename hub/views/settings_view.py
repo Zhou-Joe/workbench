@@ -33,6 +33,8 @@ def settings_view(request):
             pass
         settings.archive_mode = request.POST.get("archive_mode", settings.archive_mode)
         settings.watch_enabled = request.POST.get("watch_enabled") == "on"
+        if request.POST.get("asr_backend") in ("stub", "funasr_cpu"):
+            settings.asr_backend = request.POST["asr_backend"]
         settings.save()
         _restart_watcher(settings)
         messages.success(request, "Settings saved.")

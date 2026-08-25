@@ -36,7 +36,29 @@
 </form>
 {% endif %}
 
-{% if performed and results %}
+{% if performed and meeting_hits %}
+<div class="section-head"><h2>Meetings</h2></div>
+<ol class="search-results">
+  {% for h in meeting_hits %}
+  <li class="search-hit">
+    <div class="search-hit-head">
+      {% if h.utt %}
+      <a class="doc-open" href="{% url 'hub:meeting_detail' h.utt.meeting.pk %}">{{ h.utt.meeting.title }}</a>
+      <span class="dim num">{{ h.utt.speaker_label }} · {{ h.utt.start_ts|floatformat:1 }}s</span>
+      {% else %}
+      <a class="doc-open" href="{% url 'hub:meeting_detail' h.meeting.pk %}">{{ h.meeting.title }}</a>
+      <span class="dim num">{{ h.meeting.started_at|date:"Y-m-d" }}</span>
+      {% endif %}
+    </div>
+    {% if h.snippet %}<p class="search-snippet">{{ h.snippet }}</p>
+    {% else %}<p class="search-snippet dim">title match</p>{% endif %}
+  </li>
+  {% endfor %}
+</ol>
+{% endif %}
+
+{% if performed %}
+{% if results %}
 <ol class="search-results">
   {% for r in results %}
   <li class="search-hit">
@@ -54,8 +76,9 @@
   </li>
   {% endfor %}
 </ol>
-{% elif performed %}
+{% elif not meeting_hits %}
 <p class="empty">No documents match. Only files that have been extracted are searchable — check the phase view if a file is still “pending”.</p>
+{% endif %}
 {% else %}
 <p class="empty">Type a keyword (at least 2 characters) — decision titles, vendor names, equipment, dates… Everything the pipeline has extracted is searchable.</p>
 {% endif %}

@@ -7,7 +7,7 @@ from django.utils.html import escape, mark_safe
 from django.views.decorators.http import require_GET, require_POST
 
 from ..events import bus
-from ..models import Document, SavedSearch
+from ..models import Document, Meeting, SavedSearch, Utterance
 
 RESULT_LIMIT = 50
 SNIPPET_RADIUS = 110
@@ -24,6 +24,7 @@ def match_count(query):
 def search(request):
     q = request.GET.get("q", "").strip()
     results = []
+    meeting_hits = []
     if len(q) >= 2:
         docs = (
             Document.objects.filter(extracted_text__icontains=q)
@@ -36,6 +37,19 @@ def search(request):
                     "snippet": _snippet(doc.extracted_text, q),
                 }
             )
+        # Meeting transcripts are searchable too — utterance text, its
+        # translation, and the meeting title all match.
+        seen_meetings = set()
+        matching_utts = (
+            Utterance.objects.filter(text__icontains=q)
+            | Utterance.objects.filter(translation__icontains=q)
+        ).select_related("meeting").order_by("-meeting__started_at")[:RESULT_LIMIT]
+        for utt in matching_utts:
+            seen_meetings.add(utt.meeting_id)
+            meeting_hits.append({"utt": utt, "snippet": _snippet(utt.text or utt.translation, q)})
+        for meeting in Meeting.objects.filter(title__icontains=q).order_by("-started_at"):
+            if meeting.pk not in seen_meetings:
+                meeting_hits.append({"utt": None, "meeting": meeting, "snippet": ""})
     # visiting via a saved-search link marks its matches as seen
     seen_id = request.GET.get("seen", "")
     if seen_id:
@@ -50,7 +64,8 @@ def search(request):
             "q": q,
             "performed": len(q) >= 2,
             "results": results,
-            "total_shown": len(results),
+            "meeting_hits": meeting_hits,
+            "total_shown": len(results) + len(meeting_hits),
             "saved_searches": SavedSearch.objects.all(),
         },
     )

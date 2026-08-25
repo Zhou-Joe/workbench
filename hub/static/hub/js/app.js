@@ -242,3 +242,29 @@
     }
   });
 })();
+
+/* Shared helper: read an SSE endpoint that streams `data: <delta>` lines and
+   append them into `target`. Resolves on [DONE]. Used by the meeting summary
+   and series overview streams. */
+window.RPH = window.RPH || {};
+window.RPH.streamSummary = async function (url, target) {
+  const resp = await fetch(url, { headers: { Accept: "text/event-stream" } });
+  if (!resp.ok || !resp.body) throw new Error("HTTP " + resp.status);
+  const reader = resp.body.getReader();
+  const decoder = new TextDecoder();
+  let buf = "";
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += decoder.decode(value, { stream: true });
+    const parts = buf.split("\n\n");
+    buf = parts.pop();
+    for (const part of parts) {
+      const line = part.trim();
+      if (!line.startsWith("data:")) continue;
+      const data = line.slice(5).trim();
+      if (data === "[DONE]") return;
+      target.append(data);
+    }
+  }
+};
