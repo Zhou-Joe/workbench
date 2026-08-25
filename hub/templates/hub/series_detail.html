@@ -1,0 +1,58 @@
+{% extends "hub/base.html" %}
+{% load static %}
+{% block title %}{{ series.title }} — Ride Program Hub{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="crumb"><a href="{% url 'hub:meetings' %}">Meetings</a> /
+      <a href="{% url 'hub:series_list' %}">Series</a> / {{ series.title }}</p>
+    <h1>{{ series.title }}</h1>
+    <p class="dim num">{{ series.get_frequency_display }}
+      {% if series.description %} — {{ series.description }}{% endif %}</p>
+  </div>
+  <div class="meetings-head-actions">
+    <button type="button" class="primary" id="summarize-btn">Progress overview</button>
+    <form hx-post="{% url 'hub:series_delete' series.pk %}" hx-swap="none"
+          hx-confirm="Delete this series? Meetings stay, they just lose the grouping.">
+      <button type="submit" class="mini">Delete</button>
+    </form>
+  </div>
+</div>
+
+<div id="series-page"
+     hx-get="{% url 'hub:series_detail' series.pk %}"
+     hx-select="#series-page"
+     hx-swap="outerHTML"
+     hx-trigger="rph:tick from:body">
+  <div class="panel summary-panel">
+    <div class="section-head"><h2>Progress overview</h2></div>
+    <div id="summary-text" class="report-body">
+      {% if series.summary %}{{ series.summary|linebreaksbr }}{% else %}
+      <p class="dim">No overview yet — generated from each meeting's summary (or transcript).</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="section-head"><h2>Meetings</h2></div>
+    {% include "hub/_meeting_rows.html" with meetings=meetings %}
+  </div>
+
+  <div class="panel">
+    <div class="section-head"><h2>Edit</h2></div>
+    <form class="inline-form"
+          hx-post="{% url 'hub:series_edit' series.pk %}"
+          hx-target="#series-page" hx-select="#series-page" hx-swap="outerHTML">
+      <input type="text" name="title" value="{{ series.title }}" required>
+      <select name="frequency">
+        <option value="weekly" {% if series.frequency == 'weekly' %}selected{% endif %}>weekly</option>
+        <option value="biweekly" {% if series.frequency == 'biweekly' %}selected{% endif %}>biweekly</option>
+        <option value="monthly" {% if series.frequency == 'monthly' %}selected{% endif %}>monthly</option>
+      </select>
+      <input type="text" name="description" value="{{ series.description }}">
+      <button type="submit" class="mini">Save</button>
+    </form>
+  </div>
+</div>
+<script src="{% static 'hub/js/series-summary.js' %}" defer></script>
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends "hub/base.html" %}
+{% block title %}Series — Ride Program Hub{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="crumb"><a href="{% url 'hub:meetings' %}">Meetings</a> / Series</p>
+    <h1>Meeting series</h1>
+    <p class="hint">Recurring meetings group automatically (W## / B## / YYYY-MM title suffixes)
+    and get cross-meeting progress overviews.</p>
+  </div>
+</div>
+
+<div id="series-area"
+     hx-get="{% url 'hub:series_list' %}"
+     hx-select="#series-area"
+     hx-swap="outerHTML"
+     hx-trigger="rph:tick from:body">
+  <div class="panel">
+    <form class="inline-form"
+          hx-post="{% url 'hub:series_create' %}"
+          hx-target="#series-area" hx-select="#series-area" hx-swap="outerHTML">
+      <input type="text" name="title" placeholder="Weekly design review" required>
+      <select name="frequency">
+        <option value="weekly">weekly</option>
+        <option value="biweekly">biweekly</option>
+        <option value="monthly">monthly</option>
+      </select>
+      <input type="text" name="description" placeholder="What this series tracks (optional)">
+      <button type="submit">Create series</button>
+    </form>
+  </div>
+
+  {% if all_series %}
+  <div class="panel">
+    <div class="meetings-list">
+      {% for s in all_series %}
+      <div class="meeting-row">
+        <a class="meeting-main" href="{% url 'hub:series_detail' s.pk %}">
+          <span class="meeting-title">{{ s.title }}</span>
+          <span class="chip">{{ s.get_frequency_display }}</span>
+          <span class="dim num">{{ s.meetings.all|length }} meetings</span>
+          {% if s.summary %}<span class="chip chip-ok">summary</span>{% endif %}
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% else %}
+  <p class="empty">No series yet. Create one, then pick it when starting a live session.</p>
+  {% endif %}
+</div>
+{% endblock %}

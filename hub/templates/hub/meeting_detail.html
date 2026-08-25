@@ -1,0 +1,135 @@
+{% extends "hub/base.html" %}
+{% load static %}
+{% block title %}{{ meeting.title }} — Ride Program Hub{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="crumb"><a href="{% url 'hub:meetings' %}">Meetings</a> /
+      {% if meeting.series %}<a href="{% url 'hub:series_detail' meeting.series.pk %}">{{ meeting.series.title }}</a> / {% endif %}
+      {{ meeting.started_at|date:"Y-m-d" }}</p>
+    <h1 id="meeting-title">{{ meeting.title }}</h1>
+    <p class="dim num">
+      {{ meeting.started_at|date:"Y-m-d H:i" }}
+      {% if meeting.duration_s %} · {{ meeting.duration_s|floatformat:0 }}s{% endif %}
+      · {{ meeting.get_status_display }}
+      {% if meeting.filed_document %}
+        · filed to
+        <a href="{% url 'hub:phase' meeting.filed_document.phase.project.slug meeting.filed_document.phase.order %}">
+          {{ meeting.filed_document.phase.project.name }} / {{ meeting.filed_document.phase.name }}</a>
+      {% endif %}
+    </p>
+  </div>
+  <div class="meetings-head-actions">
+    <button type="button" class="primary" id="summarize-btn">Summarize</button>
+    <button type="button"
+            hx-post="{% url 'hub:meeting_diarize' meeting.pk %}"
+            hx-target="#meeting-page" hx-select="#meeting-page" hx-swap="outerHTML"
+            hx-indicator="#meeting-busy">Diarize</button>
+    <button type="button"
+            hx-post="{% url 'hub:meeting_reprocess' meeting.pk %}"
+            hx-target="#meeting-page" hx-select="#meeting-page" hx-swap="outerHTML"
+            hx-confirm="Re-run VAD + transcription on the full audio? This replaces the current transcript."
+            hx-indicator="#meeting-busy">Reprocess</button>
+    <form hx-post="{% url 'hub:meeting_delete' meeting.pk %}" hx-swap="none"
+          hx-confirm="Delete this meeting, its transcript, and its audio?">
+      <button type="submit" class="mini">Delete</button>
+    </form>
+  </div>
+</div>
+<span id="meeting-busy" class="htmx-indicator dim">working…</span>
+
+<div id="meeting-page"
+     hx-get="{% url 'hub:meeting_detail' meeting.pk %}"
+     hx-select="#meeting-page"
+     hx-swap="outerHTML"
+     hx-trigger="rph:tick from:body">
+  {% if action_error %}<p class="form-error">{{ action_error }}</p>{% endif %}
+
+  <div class="panel summary-panel">
+    <div class="section-head"><h2>Summary</h2></div>
+    <div id="summary-text" class="report-body">
+      {% if meeting.summary %}{{ meeting.summary|linebreaksbr }}{% else %}
+      <p class="dim">No summary yet — Summarize sends the full transcript through your LM Studio model.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="section-head"><h2>Transcript</h2></div>
+    {% include "hub/_meeting_transcript.html" %}
+  </div>
+
+  <div class="panel">
+    <div class="section-head"><h2>Audio &amp; export</h2></div>
+    {% if meeting.audio_path %}
+    <audio controls preload="none" src="{% url 'hub:meeting_audio' meeting.pk %}" class="meeting-audio"></audio>
+    {% else %}<p class="dim">No audio saved.</p>{% endif %}
+    <div class="export-row" id="export-row">
+      <button type="button" data-export="md">Markdown</button>
+      <button type="button" data-export="txt">TXT</button>
+      <button type="button" data-export="srt">SRT</button>
+      <button type="button" data-export="html">HTML</button>
+      <button type="button" data-export="json">JSON</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="section-head"><h2>Speakers</h2></div>
+    {% if speaker_labels %}
+    <form class="inline-form"
+          hx-post="{% url 'hub:meeting_rename_speaker' meeting.pk %}"
+          hx-target="#transcript" hx-select="#transcript" hx-swap="outerHTML">
+      <select name="old_label">
+        {% for lbl in speaker_labels %}<option value="{{ lbl }}">{{ lbl }}</option>{% endfor %}
+      </select>
+      <input type="text" name="new_label" placeholder="rename to (e.g. Chen)" required>
+      <button type="submit" class="mini">Rename label</button>
+    </form>
+    <form class="inline-form"
+          hx-post="{% url 'hub:meeting_enroll' meeting.pk %}"
+          hx-target="#meeting-page" hx-select="#meeting-page" hx-swap="outerHTML"
+          hx-indicator="#meeting-busy">
+      <select name="speaker_label">
+        {% for lbl in speaker_labels %}<option value="{{ lbl }}">{{ lbl }}</option>{% endfor %}
+      </select>
+      <input type="text" name="speaker_name" placeholder="register voiceprint as (optional)">
+      <button type="submit" class="mini">Enroll voiceprint</button>
+    </form>
+    <p class="hint">Enroll stores this speaker's voice signature from their diarized segments —
+    future meetings label them automatically. Run Diarize first.</p>
+    {% else %}
+    <p class="dim">No utterances yet.</p>
+    {% endif %}
+  </div>
+
+  <div class="panel">
+    <div class="section-head"><h2>Send to phase</h2></div>
+    <form class="inline-form"
+          hx-post="{% url 'hub:meeting_send_to_phase' meeting.pk %}"
+          hx-target="#meeting-page" hx-select="#meeting-page" hx-swap="outerHTML">
+      <select name="phase_id" required>
+        <option value="">choose project / phase…</option>
+        {% for ph in all_phases %}
+        <option value="{{ ph.pk }}">{{ ph.project.name }} / {{ ph.order|stringformat:"02d" }} {{ ph.name }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit">File minutes</button>
+    </form>
+    <p class="hint">Writes meeting-<span class="num">YYYY-MM-DD</span>-title.md into the phase folder;
+    the extraction pipeline turns the transcript into milestones like any other document.</p>
+  </div>
+</div>
+
+<script id="meeting-data" type="application/json">{
+  "id": {{ meeting.pk }},
+  "title": {{ meeting.title|json }},
+  "date": "{{ meeting.started_at|date:'Y-m-d H:i' }}",
+  "utterances": [{% for u in utterances %}{
+    "seq": {{ u.seq }}, "start_ts": {{ u.start_ts|floatformat:"2"|default:"0" }},
+    "end_ts": {{ u.end_ts|floatformat:"2"|default:"0" }},
+    "text": {{ u.text|json }}, "translation": {{ u.translation|default_if_none:""|json }},
+    "speaker_label": {{ u.speaker_label|json }}
+  }{% if not forloop.last %},{% endif %}{% endfor %}]
+}</script>
+<script src="{% static 'hub/js/meetings-detail.js' %}" defer></script>
+{% endblock %}

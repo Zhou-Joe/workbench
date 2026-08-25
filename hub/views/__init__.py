@@ -41,6 +41,30 @@ from .timeline import project_calendar, project_timeline
 from .milestones import milestone_action, milestone_edit
 from .settings_view import lm_status, settings_view
 from .sse import sse
+from .meetings import (
+    meeting_audio,
+    meeting_delete,
+    meeting_detail,
+    meeting_diarize,
+    meeting_edit,
+    meeting_enroll,
+    meeting_live,
+    meeting_rename_speaker,
+    meeting_reprocess,
+    meeting_send_to_phase,
+    meeting_summarize_stream,
+    meetings,
+    utterance_edit,
+)
+from .meeting_speakers import speaker_create, speaker_delete, speaker_enroll, speakers
+from .meeting_series import (
+    series_create,
+    series_delete,
+    series_detail,
+    series_edit,
+    series_list,
+    series_summarize_stream,
+)
 
 __all__ = [
     "home",
@@ -101,4 +125,27 @@ __all__ = [
     "settings_view",
     "lm_status",
     "sse",
+    "meetings",
+    "meeting_live",
+    "meeting_detail",
+    "meeting_audio",
+    "meeting_edit",
+    "meeting_delete",
+    "meeting_diarize",
+    "meeting_reprocess",
+    "meeting_summarize_stream",
+    "meeting_enroll",
+    "meeting_rename_speaker",
+    "meeting_send_to_phase",
+    "utterance_edit",
+    "speakers",
+    "speaker_create",
+    "speaker_delete",
+    "speaker_enroll",
+    "series_list",
+    "series_detail",
+    "series_create",
+    "series_edit",
+    "series_delete",
+    "series_summarize_stream",
 ]

@@ -1,0 +1,10 @@
+<div id="transcript" class="transcript">
+  <datalist id="utt-speakers">
+    {% for lbl in speaker_labels %}<option value="{{ lbl }}"></option>{% endfor %}
+  </datalist>
+  {% for utt in utterances %}
+  {% include "hub/_utterance_row.html" %}
+  {% empty %}
+  <p class="dim">Empty transcript.</p>
+  {% endfor %}
+</div>

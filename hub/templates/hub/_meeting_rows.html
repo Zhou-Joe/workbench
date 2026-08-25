@@ -1,0 +1,18 @@
+<div class="meetings-list">
+  {% for m in meetings %}
+  <div class="meeting-row">
+    <a class="meeting-main" href="{% url 'hub:meeting_detail' m.pk %}">
+      <span class="meeting-title">{{ m.title }}</span>
+      <span class="dim num">{{ m.started_at|date:"Y-m-d H:i" }}</span>
+      {% if m.duration_s %}<span class="dim num">{{ m.duration_s|floatformat:0 }}s</span>{% endif %}
+      {% if m.utterances.count %}<span class="chip">{{ m.utterances.count }} lines</span>{% endif %}
+      {% if m.summary %}<span class="chip">summary</span>{% endif %}
+      {% if m.filed_document %}<span class="chip chip-ok">filed</span>{% endif %}
+    </a>
+    <form hx-post="{% url 'hub:meeting_delete' m.pk %}" hx-swap="none"
+          hx-confirm="Delete this meeting, its transcript, and its audio?">
+      <button type="submit" class="mini">Delete</button>
+    </form>
+  </div>
+  {% endfor %}
+</div>

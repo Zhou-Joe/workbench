@@ -25,6 +25,7 @@
     <nav class="masthead-nav">
       <a href="{% url 'hub:home' %}">Portfolio</a>
       <a href="{% url 'hub:inbox' %}">Inbox{% if inbox_count %} <span class="navbadge">{{ inbox_count }}</span>{% endif %}</a>
+      <a href="{% url 'hub:meetings' %}">Meetings</a>
       <a href="{% url 'hub:ask' %}">Ask</a>
       <a href="{% url 'hub:jobs' %}">Jobs{% if jobs_failed %} <span class="navbadge navbadge-warn">{{ jobs_failed }}</span>{% endif %}</a>
       <a href="{% url 'hub:settings' %}">Settings</a>

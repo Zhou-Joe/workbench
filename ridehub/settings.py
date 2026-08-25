@@ -11,6 +11,7 @@ DEBUG = True  # single-user localhost tool; not for deployment
 ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 
 INSTALLED_APPS = [
+    "daphne",  # must be first so its runserver serves ASGI + WebSocket
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -49,6 +50,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "ridehub.wsgi.application"
+ASGI_APPLICATION = "ridehub.asgi.application"
 
 DATABASES = {
     "default": {

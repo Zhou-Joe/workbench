@@ -1,0 +1,47 @@
+{% extends "hub/base.html" %}
+{% load static %}
+{% block title %}Live session — Ride Program Hub{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="crumb"><a href="{% url 'hub:meetings' %}">Meetings</a> / Live session</p>
+    <h1>Live session</h1>
+    <p class="hint">Mic captures you; system audio captures what the room hears (video calls,
+    playback). Both can run at once — they're mixed into one stream.</p>
+  </div>
+</div>
+
+<div id="live-root" class="panel live-panel">
+  <div id="live-setup">
+    <form id="live-start-form" class="live-start">
+      <label>Title
+        <input type="text" name="title" placeholder="Design review" required>
+      </label>
+      <label>Series
+        <select name="series_id">
+          <option value="">— one-off —</option>
+          {% for s in all_series %}
+          <option value="{{ s.pk }}">{{ s.title }} ({{ s.get_frequency_display }})</option>
+          {% endfor %}
+        </select>
+      </label>
+      <button type="submit" class="primary">Start</button>
+    </form>
+    <p class="hint">Starting loads the ASR models on first use (~30–60 s, once per server run).</p>
+  </div>
+
+  <div id="live-run" hidden>
+    <div class="live-controls">
+      <button type="button" id="live-mic" class="live-toggle">Mic: off</button>
+      <button type="button" id="live-sys" class="live-toggle">System audio: off</button>
+      <button type="button" id="live-translate" class="live-toggle on" aria-pressed="true">译 on</button>
+      <button type="button" id="live-stop" class="live-stop">Stop</button>
+      <div class="level-meter" aria-hidden="true"><div class="level-fill" id="live-level"></div></div>
+      <span id="live-status" class="dim">connecting…</span>
+    </div>
+    <p class="hint">Pick at least one source; audio flows only while a source is live.</p>
+    <div id="live-transcript" class="live-transcript" aria-live="polite"></div>
+  </div>
+</div>
+<script src="{% static 'hub/js/meetings.js' %}" defer></script>
+{% endblock %}

@@ -1,0 +1,19 @@
+<div class="utt-row" id="utt-{{ utt.pk }}">
+  <details class="utt-edit">
+    <summary class="mini">Edit</summary>
+    <form class="inline-form"
+          hx-post="{% url 'hub:utterance_edit' utt.pk %}"
+          hx-target="#utt-{{ utt.pk }}" hx-select="#utt-{{ utt.pk }}" hx-swap="outerHTML">
+      <input type="text" name="text" value="{{ utt.text }}" class="utt-edit-text">
+      <input type="text" name="translation" value="{{ utt.translation }}" placeholder="translation">
+      <input type="text" name="speaker_label" value="{{ utt.speaker_label }}" list="utt-speakers">
+      <button type="submit" class="mini">Save</button>
+    </form>
+  </details>
+  <div class="utt-main">
+    <span class="utt-speaker num">{{ utt.speaker_label }}</span>
+    <span class="utt-time dim num">{{ utt.start_ts|floatformat:1 }}s</span>
+    <span class="utt-text">{{ utt.text }}</span>
+    {% if utt.translation %}<blockquote class="utt-translation dim">{{ utt.translation }}</blockquote>{% endif %}
+  </div>
+</div>

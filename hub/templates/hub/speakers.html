@@ -1,0 +1,63 @@
+{% extends "hub/base.html" %}
+{% block title %}Speakers — Ride Program Hub{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="crumb"><a href="{% url 'hub:meetings' %}">Meetings</a> / Speakers</p>
+    <h1>Speakers</h1>
+    <p class="hint">People with enrolled voiceprints. Diarization matches cluster centroids
+    against these; ≥ 0.5 cosine similarity wins.</p>
+  </div>
+</div>
+
+<div id="speakers-area"
+     hx-get="{% url 'hub:speakers' %}"
+     hx-select="#speakers-area"
+     hx-swap="outerHTML"
+     hx-trigger="rph:tick from:body">
+  {% if action_error %}<p class="form-error">{{ action_error }}</p>{% endif %}
+
+  <div class="panel">
+    <form class="inline-form"
+          hx-post="{% url 'hub:speaker_create' %}"
+          hx-target="#speakers-area" hx-select="#speakers-area" hx-swap="outerHTML">
+      <input type="text" name="name" placeholder="Name" required>
+      <input type="color" name="color" value="#FF4F00" list="speaker-colors">
+      <datalist id="speaker-colors">
+        <option value="#FF4F00"><option value="#111111"><option value="#0A7B5F">
+        <option value="#B1006E"><option value="#0057D8">
+      </datalist>
+      <button type="submit">Add speaker</button>
+    </form>
+  </div>
+
+  {% if speakers %}
+  <div class="panel">
+    <div class="speakers-list">
+      {% for s in speakers %}
+      <div class="speaker-card">
+        <p class="speaker-name">
+          <span class="speaker-dot" style="background:{{ s.color }}"></span>{{ s.name }}
+          <span class="chip num">{{ s.voiceprints.all|length }} print{{ s.voiceprints.all|length|pluralize }}</span>
+        </p>
+        <form class="inline-form"
+              hx-post="{% url 'hub:speaker_enroll' s.pk %}"
+              hx-target="#speakers-area" hx-select="#speakers-area" hx-swap="outerHTML"
+              hx-encoding="multipart/form-data">
+          <input type="file" name="clip" accept="audio/*" required>
+          <button type="submit" class="mini">Enroll clip</button>
+        </form>
+        <form hx-post="{% url 'hub:speaker_delete' s.pk %}"
+              hx-target="#speakers-area" hx-select="#speakers-area" hx-swap="outerHTML"
+              hx-confirm="Delete {{ s.name }} and their voiceprints?">
+          <button type="submit" class="mini">Delete</button>
+        </form>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% else %}
+  <p class="empty">No speakers yet — or enroll directly from a diarized meeting on its detail page.</p>
+  {% endif %}
+</div>
+{% endblock %}

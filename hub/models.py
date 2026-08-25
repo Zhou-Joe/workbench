@@ -542,6 +542,120 @@ class WeeklyReport(models.Model):
         return f"report {self.project} {self.created_at:%Y-%m-%d}"
 
 
+class MeetingSeries(models.Model):
+    """Recurring meeting (design review, weekly stand-up) tracked across sessions."""
+
+    class Frequency(models.TextChoices):
+        WEEKLY = "weekly"
+        BIWEEKLY = "biweekly"
+        MONTHLY = "monthly"
+
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    frequency = models.CharField(
+        max_length=10, choices=Frequency, default=Frequency.WEEKLY
+    )
+    summary = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["title"]
+        verbose_name_plural = "meeting series"
+
+    def __str__(self):
+        return self.title
+
+
+class Speaker(models.Model):
+    """A person with enrolled voiceprints used to label diarized speakers."""
+
+    name = models.CharField(max_length=120)
+    color = models.CharField(max_length=7, default="#FF4F00")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+
+class Voiceprint(models.Model):
+    speaker = models.ForeignKey(
+        Speaker, on_delete=models.CASCADE, related_name="voiceprints"
+    )
+    embedding = models.BinaryField(help_text="192-dim float32 vector")
+    sample_path = models.CharField(max_length=1024, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"voiceprint #{self.pk} of {self.speaker}"
+
+
+class Meeting(models.Model):
+    class Status(models.TextChoices):
+        LIVE = "live"
+        PROCESSING = "processing"
+        DONE = "done"
+
+    title = models.CharField(max_length=300)
+    series = models.ForeignKey(
+        MeetingSeries,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="meetings",
+    )
+    started_at = models.DateTimeField(auto_now_add=True)
+    ended_at = models.DateTimeField(null=True, blank=True)
+    status = models.CharField(max_length=10, choices=Status, default=Status.LIVE)
+    audio_path = models.CharField(
+        max_length=300, blank=True, help_text="WAV name under var/meetings/audio/"
+    )
+    summary = models.TextField(blank=True)
+    filed_document = models.ForeignKey(
+        Document,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="meetings",
+        help_text="Minutes document created by send-to-phase",
+    )
+
+    class Meta:
+        ordering = ["-started_at"]
+
+    def __str__(self):
+        return self.title
+
+    @property
+    def duration_s(self):
+        if self.ended_at is None:
+            return None
+        return max(0.0, (self.ended_at - self.started_at).total_seconds())
+
+
+class Utterance(models.Model):
+    meeting = models.ForeignKey(
+        Meeting, on_delete=models.CASCADE, related_name="utterances"
+    )
+    seq = models.PositiveIntegerField()
+    start_ts = models.FloatField(default=0.0, help_text="Seconds from meeting start")
+    end_ts = models.FloatField(default=0.0)
+    text = models.TextField(blank=True)
+    lang = models.CharField(max_length=8, default="unknown")
+    translation = models.TextField(blank=True)
+    speaker_label = models.CharField(max_length=120, default="speaker_0")
+    is_final = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["meeting", "seq"]
+        unique_together = [("meeting", "seq")]
+
+    def __str__(self):
+        return f"{self.meeting_id}/{self.seq}: {self.text[:50]}"
+
+
 class AppSettings(models.Model):
     class ArchiveMode(models.TextChoices):
         MOVE = "move"
@@ -562,6 +676,12 @@ class AppSettings(models.Model):
         max_length=8, choices=ArchiveMode, default=ArchiveMode.MOVE
     )
     watch_enabled = models.BooleanField(default=True)
+    asr_backend = models.CharField(
+        max_length=12,
+        choices=[("stub", "stub"), ("funasr_cpu", "funasr_cpu")],
+        default="funasr_cpu",
+        help_text="Meeting transcription engine; stub needs no models",
+    )
     updated_at = models.DateTimeField(auto_now=True)
 
     def save(self, *args, **kwargs):

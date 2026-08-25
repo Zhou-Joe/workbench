@@ -46,6 +46,45 @@ def chat(settings, messages):
         raise LLMError(f"Unexpected LM Studio response shape: {exc}") from exc
 
 
+def chat_stream(settings, messages):
+    """Yield text deltas from a streaming chat completion (SSE deltas).
+
+    Lazy like chat(): connection errors raise LLMUnavailable on first
+    iteration, malformed chunks raise LLMError mid-stream.
+    """
+    if not settings.lm_model:
+        raise LLMUnavailable(
+            "No model configured — set the model name on the Settings screen."
+        )
+    url = settings.lm_base_url.rstrip("/") + "/chat/completions"
+    payload = {
+        "model": settings.lm_model,
+        "messages": messages,
+        "temperature": settings.lm_temperature,
+        "max_tokens": settings.lm_max_tokens,
+        "stream": True,
+    }
+    try:
+        resp = requests.post(url, json=payload, timeout=REQUEST_TIMEOUT, stream=True)
+    except requests.RequestException as exc:
+        raise LLMUnavailable(f"LM Studio not reachable at {settings.lm_base_url}: {exc}") from exc
+    if resp.status_code != 200:
+        raise LLMError(f"LM Studio returned HTTP {resp.status_code}: {resp.text[:500]}")
+    try:
+        for line in resp.iter_lines(decode_unicode=True):
+            if not line or not line.startswith("data:"):
+                continue
+            data = line[len("data:"):].strip()
+            if data == "[DONE]":
+                return
+            chunk = json.loads(data)
+            delta = chunk["choices"][0].get("delta", {}).get("content")
+            if delta:
+                yield delta
+    except (KeyError, IndexError, ValueError) as exc:
+        raise LLMError(f"Unexpected LM Studio stream chunk: {exc}") from exc
+
+
 def extract_json(content):
     """Parse a JSON object out of a model reply, tolerating code fences."""
     text = (content or "").strip()
