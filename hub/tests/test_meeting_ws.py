@@ -3,23 +3,14 @@
 Runs against the real ASGI application via channels' WebsocketCommunicator.
 TransactionTestCase so the consumer's sync_to_async DB calls (executed in
 worker threads) see real committed rows.
-
-DJANGO_ALLOW_ASYNC_UNSAFE: under the test harness, sync_to_async's
-thread-sensitive executor runs ORM calls on the loop thread, tripping
-Django's async-unsafe guard. Production (daphne) uses a dedicated writer
-thread, so this is a test-environment-only relaxation — the documented
-channels testing pattern.
 """
 
 import json
-import os
 
-os.environ.setdefault("DJANGO_ALLOW_ASYNC_UNSAFE", "1")
+from channels.testing import WebsocketCommunicator
+from django.test import TransactionTestCase
 
-from channels.testing import WebsocketCommunicator  # noqa: E402
-from django.test import TransactionTestCase  # noqa: E402
-
-from hub.models import AppSettings, Meeting, MeetingSeries, Utterance  # noqa: E402
+from hub.models import AppSettings, Meeting, MeetingSeries, Utterance
 
 
 class MeetingStreamTests(TransactionTestCase):

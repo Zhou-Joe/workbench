@@ -80,7 +80,7 @@ class MeetingStreamConsumer(AsyncWebsocketConsumer):
             await self.close()
             return
 
-        self._asr = get_asr_client()
+        self._asr = await sync_to_async(get_asr_client)()
         self._session_id = await self._asr.start_session()
         await self._send(
             {"type": "ready", "meeting_id": self._meeting_id, "title": self._title}
