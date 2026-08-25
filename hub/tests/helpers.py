@@ -70,7 +70,7 @@ def make_xlsx(path, rows):
     wb.save(str(path))
 
 
-def make_eml(path, subject, body, from_="vendor@partner.com", to="me@disney.com"):
+def make_eml(path, subject, body, from_="vendor@partner.com", to="me@example.com"):
     msg = EmailMessage()
     msg["From"] = from_
     msg["To"] = to
